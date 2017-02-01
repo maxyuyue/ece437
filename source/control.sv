@@ -132,7 +132,6 @@
         if (instr[31:26] == ADDI) begin // I-type instruction
           // Nothing needed
         end
-        
         else if (instr[31:26] == ADDIU) begin // I-type instruction
           // Nothing needed
         end
@@ -140,65 +139,60 @@
           countIf.aluOp = ALU_AND;
         end
         else if (instr[31:26] == BEQ) begin // I-type instruction
-          // TODO
+          countIf.branch = 1;
+          countIf.WEN = 0;
+          countIf.aluSrc = 0;
+          countIf.aluOp = ALU_SUB;
+          countIf.aluCont = 01;
         end
         else if (instr[31:26] == BNE) begin // I-type instruction
-          // TODO
+          countIf.branch = 1;
+          countIf.WEN = 0;
+          countIf.aluSrc = 0;
+          countIf.aluOp = ALU_SUB;
+          countIf.aluCont = 01;
+          countIf.bne = 1;
         end
         else if (instr[31:26] == LUI) begin // I-type instruction
-          // TODO
+          countIf.lui = 1;
         end
         else if (instr[31:26] == LW) begin // I-type instruction
-          // TODO
+          countIf.memToReg = 1;
+          countIf.dREN = 1;
+          countIf.aluCont = 00;
         end
         else if (instr[31:26] == ORI) begin // I-type instruction
-            countIf.branch = 0;
-            countIf.WEN = 1;
-            countIf.aluSrc = 1;
-            countIf.memToReg = 0;
-            countIf.dREN = 0;
-            countIf.dWEN = 0;
             countIf.aluOp = ALU_OR;
-            countIf.aluCont = 11;
-            countIf.jmp = 0;
-            countIf.jl = 0;//
-            countIf.bne = 0;
             countIf.zeroExt = 1;
-            countIf.lui = 0;
         end
         else if (instr[31:26] == SLTI) begin // I-type instruction
-          // TODO
+          countIf.aluOp = ALU_SLT;
         end
         else if (instr[31:26] == SLTIU) begin // I-type instruction
-          // TODO
+          countIf.aluOp = ALU_SLTU;
         end
         else if (instr[31:26] == SW) begin // I-type instruction
-            countIf.branch = 0;
             countIf.WEN = 0;
-            countIf.aluSrc = 1;
-            countIf.memToReg = 0;
-            countIf.dREN = 0;
             countIf.dWEN = 1;
-            countIf.aluOp = ALU_ADD;
             countIf.aluCont = 00;
-            countIf.jmp = 0;
-            countIf.jl = 0;
-            countIf.bne = 0;
-            countIf.zeroExt = 0;
-            countIf.lui = 0;
         end
         else if (instr[31:26] == LL) begin // I-type instruction
-          // TODO
+          // TODO when needed
         end
         else if (instr[31:26] == SC) begin // I-type instruction
-          // TODO
-        end
-        else if (instr[31:26] == BEQ) begin // I-type instruction
-          // TODO
+          // TODO when needed
         end
         else if (instr[31:26] == XORI) begin // I-type instruction
           countIf.aluOp = ALU_XOR;
           countIf.zeroExt = 1;
+        end
+        else if (instr[31:26] == J) begin // J-type instruction
+          countIf.WEN = 0;
+          countIf.jmp = 1;
+        end
+        else if (instr[31:26] == JAL) begin // J-type instruction
+          countIf.jmp = 1;
+          countIf.jl = 1;
         end
 
       end
