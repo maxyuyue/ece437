@@ -23,28 +23,63 @@ module datapath (
   parameter PC_INIT = 0;
 
   // Declared interfaces 
-  control_if contIf();
+  control_if countIf();
   register_file_if rfif();
   alu_file_if aluf ();
 
   // Declared connections and variables
   word_t	pc, newPC;
   word_t 	extendOut;
-
+  r_t rType;
+  
 
   // Datapath blocks
   register_file rf (CLK, nRST, rfif);
-  programCounter progCount (pc, dpif.imemload, extendOut, contIf, rfif.rdat1, newPC);
+  programCounter progCount (pc, dpif.imemload, extendOut, rfif.rdat1, aluf.zero, countIf, newPC);
   alu_file alu(aluf);
-  control controler (dpif.imemload, contIf);
-  requestUnit request(CLK, nRST, contIf.dREN, contIf.dWEN, dpif.ihit, dpif.dhit, dpif.dmemREN, dpif.dmemWEN);
+  control controler (dpif.imemload, countIf);
+  requestUnit request(CLK, nRST, countIf.dREN, countIf.dWEN, dpif.ihit, dpif.dhit, dpif.dmemREN, dpif.dmemWEN);
+
+  assign dpif.imemREN = 1;
+  assign dpif.dmemstore = rfif.rdat2;
+  assign dpif.dmemaddr = aluf.outputPort;
+
+
+  /********** Halt Signal **********/
+  always_comb begin
+  	if (dpif.imemload == 32'hffffffff) begin
+  		dpif.halt = 1;
+  		//dpif.flushed = 1;
+  	end
+  	else begin
+  		dpif.halt = 0;
+  		//dpif.flushed = 0;
+  	end
+  end
+  /********** Halt Signal **********/
+
+
+  /********** ALU Inputs **********/
+  assign aluf.portA = rfif.rdat1;
+  assign aluf.aluop = countIf.aluOp;
+
+  always_comb begin // setting port B
+  	if (countIf.shiftSel == 1)
+  		aluf.portB = dpif.imemload[10:6];
+  	else if (countIf.aluSrc == 1) 
+  		aluf.portB = extendOut;
+  	else
+  		aluf.portB = rfif.rdat2;
+  end
+  /********** ALU Inputs **********/
+
 
   /********** Register Inputs **********/
   assign rfif.rsel1 = dpif.imemload[25:21];
   assign rfif.rsel2 = dpif.imemload[20:16];
-
+  assign rfif.WEN = countIf.WEN;
   always_comb begin //wsel iputs
-  	if (contIf.jl == 1) begin
+  	if (countIf.jl == 1) begin
   		rfif.wsel = 31;
   	end
   	else begin
@@ -71,7 +106,9 @@ module datapath (
   end
   /********** Register Inputs **********/
 
+
   // Program counter and update when ihit
+  	assign dpif.imemaddr = pc;
   	always_ff @(posedge CLK or negedge nRST) begin
 	    if (nRST == 0) begin
 	      pc <= PC_INIT;
@@ -89,7 +126,7 @@ module datapath (
 
   	// Zero or Sign Extend Unit
 	always_comb begin
-	  	if (contIf.zeroExt == 0) begin // sign extend
+	  	if (countIf.zeroExt == 0) begin // sign extend
 	  		extendOut = {dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15:0]};
 	  	end
 	  	else begin // zero extend

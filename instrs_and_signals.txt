@@ -466,7 +466,7 @@ SW     $rt,imm($rs)  M[R[rs] + SignExtImm] <= R[rt]
 	[101011] [sssss] [ttttt] [iiiiiiiiiiiiiiii]
 		RegDst = 0
 		Branch = 0
-		WEN = 1
+		WEN = 0
 		ALUSrc = 1
 		MemtoReg = X
 		dREN = 0

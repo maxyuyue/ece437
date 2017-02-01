@@ -53,7 +53,7 @@ module alu_file
         aluf.outputPort = aluf.portA ^ aluf.portB;
       end
       ALU_NOR  : begin
-        aluf.outputPort = aluf.portA ~^ aluf.portB;
+        aluf.outputPort = ~(aluf.portA | aluf.portB);
       end
       ALU_SLT  : begin
         if (signed'(aluf.portA) < signed'(aluf.portB)) 

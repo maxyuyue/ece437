@@ -16,7 +16,8 @@ import cpu_types_pkg::*;
 
 module programCounter (
   input word_t pc, imemload, extendOut, rdat1,
-  control_if contIf,
+  input logic zero,
+  control_if countIf,
   output word_t newPC
 
 );
@@ -27,11 +28,10 @@ module programCounter (
 	word_t	incPC, branchPC, mux1Out, mux2Out;
 
 
-
   // Mux 1
 	always_comb begin
-	  	if (contIf.bne == 1) begin // if a bne instruction
-	  		if ((!contIf.zero && contIf.branch) == 1) begin // branch
+	  	if (countIf.bne == 1) begin // if a bne instruction
+	  		if ((!zero && countIf.branch) == 1) begin // branch
 	  			mux1Out = branchPC;
 	  		end
 	  		else begin // no branch
@@ -39,7 +39,7 @@ module programCounter (
 	  		end
 	  	end
 	  	else begin // Not a bne instruction
-	  		if ((contIf.zero && contIf.branch) == 1) begin // branch
+	  		if ((zero && countIf.branch) == 1) begin // branch
 	  			mux1Out = branchPC;
 	  		end
 	  		else begin // no branch
@@ -50,7 +50,7 @@ module programCounter (
 
 	// Mux 2
 	always_comb begin
-		if (contIf.jmpReg == 1) // select register 1 to jump to
+		if (countIf.jmpReg == 1) // select register 1 to jump to
 			mux2Out = rdat1;
 		else // select mux1Out
 			mux2Out = mux1Out;
@@ -59,7 +59,7 @@ module programCounter (
 
 	// Mux 3
 	always_comb begin
-		if (contIf.jmp == 1) // jump address
+		if (countIf.jmp == 1) // jump address
 			newPC = {pc[31:26],(imemload[25:0] << 2)};
 		else // select mux2Out
 			newPC = mux2Out;
