@@ -36,7 +36,6 @@
         contIf.memToReg = 0;
         contIf.dREN = 0;
         contIf.dWEN = 0;
-        contIf.aluCont = 2'b10;
         contIf.jmp = 0;
         contIf.jl = 0;
         contIf.bne = 0;
@@ -121,7 +120,6 @@
         contIf.dREN = 0;
         contIf.dWEN = 0;
         contIf.aluOp = ALU_ADD;
-        contIf.aluCont = 11; // Actually determine if still needed
         contIf.jmp = 0;
         contIf.jl = 0;
         contIf.bne = 0;
@@ -142,14 +140,12 @@
           contIf.WEN = 0;
           contIf.aluSrc = 0;
           contIf.aluOp = ALU_SUB;
-          contIf.aluCont = 01;
         end
         else if (instr[31:26] == BNE) begin // I-type instruction
           contIf.branch = 1;
           contIf.WEN = 0;
           contIf.aluSrc = 0;
           contIf.aluOp = ALU_SUB;
-          contIf.aluCont = 01;
           contIf.bne = 1;
         end
         else if (instr[31:26] == LUI) begin // I-type instruction
@@ -158,7 +154,6 @@
         else if (instr[31:26] == LW) begin // I-type instruction
           contIf.memToReg = 1;
           contIf.dREN = 1;
-          contIf.aluCont = 00;
         end
         else if (instr[31:26] == ORI) begin // I-type instruction
             contIf.aluOp = ALU_OR;
@@ -173,7 +168,6 @@
         else if (instr[31:26] == SW) begin // I-type instruction
             contIf.WEN = 0;
             contIf.dWEN = 1;
-            contIf.aluCont = 00;
         end
         else if (instr[31:26] == LL) begin // I-type instruction
           // TODO when needed
