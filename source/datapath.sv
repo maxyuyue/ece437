@@ -46,6 +46,15 @@ module datapath (
 
 
   /********** Halt Signal **********/
+  /*always_ff @(posedge CLK or negedge nRST) begin
+  	if (nRST == 0) begin
+  		dpif.halt = 0;
+  	end
+  	else if (dpif.imemload == 32'hffffffff) begin
+  		dpif.halt = 1;
+  	end
+  end
+  */
   always_comb begin
   	if (dpif.imemload == 32'hffffffff) begin
   		dpif.halt = 1;
