@@ -37,7 +37,7 @@ module datapath (
   register_file rf (CLK, nRST, rfif);
   programCounter progCount (pc, dpif.imemload, extendOut, rfif.rdat1, aluf.zero, countIf, newPC);
   alu_file alu(aluf);
-  control controler (dpif.imemload, countIf, dpif.dhit);
+  control controler (dpif.imemload, countIf, dpif.dhit, dpif.ihit);
   requestUnit request(CLK, nRST, countIf.dREN, countIf.dWEN, dpif.ihit, dpif.dhit, dpif.dmemREN, dpif.dmemWEN);
 
   assign dpif.imemREN = 1;

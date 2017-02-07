@@ -13,7 +13,7 @@
     (
       input word_t instr,
       control_if contIf,
-      logic dHit
+      logic dHit, iHit
       );
 
   // Outputs
@@ -50,7 +50,7 @@
           contIf.jmpReg = 1;
         end
         else begin// always 1 otherwise
-          contIf.WEN = 1;
+          contIf.WEN = iHit;
           contIf.jmpReg = 0;
         end
 
@@ -115,7 +115,7 @@
 
         // Default signals
         contIf.branch = 0;
-        contIf.WEN = 1;
+        contIf.WEN = iHit;
         contIf.aluSrc = 1;
         contIf.memToReg = 0;
         contIf.dREN = 0;
