@@ -37,7 +37,7 @@ module datapath (
   register_file rf (CLK, nRST, rfif);
   programCounter progCount (pc, dpif.imemload, extendOut, rfif.rdat1, aluf.zero, countIf, newPC);
   alu_file alu(aluf);
-  control controler (dpif.imemload, countIf);
+  control controler (dpif.imemload, countIf, dpif.dhit);
   requestUnit request(CLK, nRST, countIf.dREN, countIf.dWEN, dpif.ihit, dpif.dhit, dpif.dmemREN, dpif.dmemWEN);
 
   assign dpif.imemREN = 1;
@@ -46,7 +46,7 @@ module datapath (
 
 
   /********** Halt Signal **********/
-  /*always_ff @(posedge CLK or negedge nRST) begin
+  always_ff @(posedge CLK or negedge nRST) begin
   	if (nRST == 0) begin
   		dpif.halt = 0;
   	end
@@ -54,7 +54,8 @@ module datapath (
   		dpif.halt = 1;
   	end
   end
-  */
+  
+  /*
   always_comb begin
   	if (dpif.imemload == 32'hffffffff) begin
   		dpif.halt = 1;
@@ -65,6 +66,7 @@ module datapath (
   		//dpif.flushed = 0;
   	end
   end
+  */
   /********** Halt Signal **********/
 
 

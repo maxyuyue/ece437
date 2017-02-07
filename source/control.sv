@@ -12,7 +12,8 @@
   module control
     (
       input word_t instr,
-      control_if contIf
+      control_if contIf,
+      logic dHit
       );
 
   // Outputs
@@ -154,6 +155,7 @@
         else if (instr[31:26] == LW) begin // I-type instruction
           contIf.memToReg = 1;
           contIf.dREN = 1;
+          contIf.WEN = dHit;
         end
         else if (instr[31:26] == ORI) begin // I-type instruction
             contIf.aluOp = ALU_OR;
