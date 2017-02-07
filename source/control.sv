@@ -13,7 +13,7 @@
     (
       input word_t instr,
       control_if contIf,
-      logic dHit, iHit
+      input logic dHit, iHit
       );
 
   // Outputs
