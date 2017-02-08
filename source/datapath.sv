@@ -40,7 +40,7 @@ module datapath (
   control controler (dpif.imemload, countIf, dpif.dhit, dpif.ihit);
   requestUnit request(CLK, nRST, countIf.dREN, countIf.dWEN, dpif.ihit, dpif.dhit, dpif.dmemREN, dpif.dmemWEN);
 
-  assign dpif.imemREN = 1;
+  assign dpif.imemREN = ~dpif.halt;
   assign dpif.dmemstore = rfif.rdat2;
   assign dpif.dmemaddr = aluf.outputPort;
 
