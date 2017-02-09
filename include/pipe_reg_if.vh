@@ -19,13 +19,18 @@ interface pipe_reg_if( );
   import cpu_types_pkg::*;
 
 
-  // Outputs
+  // Input/Outputs
   logic   regDst, branch, WEN, aluSrc, jmp, jl, jmpReg, memToReg, dREN, dWEN, lui, bne, zeroExt, shiftSel;
   logic	  [1:0] aluCont;
   aluop_t aluOp;
 
-  // Inputs
   logic   dhit, ihit, halt;
+
+  word_t instr, extendOut, incPC, pc, rdat1, rdat2, jmpAddr, outputPort;
+
+
+
+  // Input
   logic enable, flush;
 
 endinterface
