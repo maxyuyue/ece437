@@ -266,7 +266,7 @@ module datapath (
         rfif.wdat = memwbValue.pc +4;
       else begin
         if (memwbValue.memToReg == 1)
-          rfif.wdat = memwb_input.dmemload;
+          rfif.wdat = memwbValue.dmemload;
         else 
           rfif.wdat = memwbValue.outputPort;
       end

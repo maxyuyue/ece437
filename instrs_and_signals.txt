@@ -367,7 +367,7 @@ BNE    $rs,$rt,label PC <= (R[rs] != R[rt]) ? npc+BranchAddr : npc
 		zeroExt = 0
 		lui = 0
 
-LUI    $rt,imm       R[rt] <= {imm,16b'0}		-- TODO
+LUI    $rt,imm       R[rt] <= {imm,16b'0}
 	[001111] [00000] [ttttt] [iiiiiiiiiiiiiiii]
 		RegDst = 0
 		Branch = 0
@@ -386,7 +386,7 @@ LUI    $rt,imm       R[rt] <= {imm,16b'0}		-- TODO
 		zeroExt = X
 		lui = 1
 
-     $rt,imm($rs)  R[rt] <= M[R[rs] + SignExtImm]
+LW     $rt,imm($rs)  R[rt] <= M[R[rs] + SignExtImm]
 	[100011] [sssss] [ttttt] [iiiiiiiiiiiiiiii]
 		RegDst = 0
 		Branch = 0
