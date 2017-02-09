@@ -31,8 +31,8 @@ module datapath (
   // Declared connections and variables
   word_t	pc, newPC, incPC;
   word_t 	extendOut;
-  opcode_t opC, opCifid, opCidex, opCexmem, opCmemwb;
-  funct_t func, funcifid, funcidex, funcexmem, funcmemwb;
+  opcode_t opC, opCif, opCid, opCex, opCmem, opCwb;
+  funct_t func, funcif, funcid, funcex, funcmem, funcwb;
 
   logic memwbEnable;
 
@@ -60,14 +60,16 @@ module datapath (
         if (dpif.ihit == 1) begin
           opC = opcode_t'(dpif.imemload [31:26]);
           func = funct_t'(dpif.imemload[5:0]);
-          opCifid = opcode_t'(dpif.imemload [31:26]);
-          funcifid = funct_t'(dpif.imemload[5:0]);
-          opCidex = opcode_t'(ifidValue.instr[31:26]);
-          funcidex = funct_t'(ifidValue.instr[5:0]);
-          opCexmem = opcode_t'(idexValue.instr [31:26]);
-          funcexmem = funct_t'(idexValue.instr[5:0]);
-          opCmemwb = opcode_t'(exmemValue.instr [31:26]);
-          funcmemwb = funct_t'(exmemValue.instr[5:0]);
+          opCif = opcode_t'(dpif.imemload [31:26]);
+          funcif = funct_t'(dpif.imemload[5:0]);
+          opCid = opcode_t'(ifidValue.instr[31:26]);
+          funcid = funct_t'(ifidValue.instr[5:0]);
+          opCex = opcode_t'(idexValue.instr [31:26]);
+          funcex = funct_t'(idexValue.instr[5:0]);
+          opCmem = opcode_t'(exmemValue.instr [31:26]);
+          funcmem = funct_t'(exmemValue.instr[5:0]);
+          opCwb = opcode_t'(memwbValue.instr [31:26]);
+          funcwb = funct_t'(memwbValue.instr[5:0]);
         end
       end
    /* end
