@@ -28,11 +28,6 @@ interface pipe_reg_if( );
 
   word_t instr, incPC, pc, rdat1, rdat2, jmpAddr, outputPort;
 
-
-
-  // Input
-  logic enable, flush;
-
 endinterface
 
 `endif //CONTROL_IF_VH
