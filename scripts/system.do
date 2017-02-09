@@ -35,6 +35,7 @@ add wave -noupdate /system_tb/DUT/CPU/DP/controler/instr
 add wave -noupdate /system_tb/DUT/CPU/DP/controler/contIf/shiftSel
 add wave -noupdate -divider exmemValue
 add wave -noupdate /system_tb/DUT/CPU/DP/opCmem
+add wave -noupdate /system_tb/DUT/CPU/DP/exmem/enable
 add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/instr
 add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/regDst
 add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/branch
@@ -49,6 +50,7 @@ add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/rdat2
 add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/outputPort
 add wave -noupdate -divider memwbValue
 add wave -noupdate /system_tb/DUT/CPU/DP/opCwb
+add wave -noupdate /system_tb/DUT/CPU/DP/memwb/enable
 add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/instr
 add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/regDst
 add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/WEN
@@ -65,8 +67,9 @@ add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/rdat1
 add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/rdat2
 add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/outputPort
 add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/dmemload
+add wave -noupdate /system_tb/DUT/CPU/DP/rf/regs
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {80000 ps} 0}
+WaveRestoreCursors {{Cursor 1} {308882 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 132
@@ -82,4 +85,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {269999 ps}
+WaveRestoreZoom {29411 ps} {513494 ps}
