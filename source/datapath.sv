@@ -11,6 +11,7 @@
 `include "control_if.vh"
 `include "register_file_if.vh"
 `include "alu_file_if.vh"
+`include "pipe_reg_if"
 
 module datapath (
   input logic CLK, nRST,
@@ -28,14 +29,47 @@ module datapath (
   alu_file_if aluf ();
 
   // Declared connections and variables
-  word_t	pc, newPC;
+  word_t	pc, newPC, incPC;
   word_t 	extendOut;
   r_t rType;
-  
+
+  pipe_reg_if ifidValue, idexValue, exmemValue, memwbValue;
+
+/*
+prIFID.regDst = 0;
+      prIFID.branch = 0;
+      prIFID.WEN = 0;
+      prIFID.aluSrc = 0;
+      prIFID.jmp = 0;
+      prIFID.jl = 0;
+      prIFID.jmpReg = 0;
+      prIFID.memToReg = 0;
+      prIFID.dREN = 0;
+      prIFID.dWEN = 0;
+      prIFID.lui = 0;
+      prIFID.bne = 0;
+      prIFID.zeroExt = 0;
+      prIFID.shiftSel = 0;
+      prIFID.aluCont = 0;
+      prIFID.aluOp = 0;
+      instr = 32'h0;
+      extendOut = 32'h0;
+      incPC = 32'h0;
+      pc = 32'h0;
+      rdat1 = 32'h0;
+      rdat2 = 32'h0;
+      jmpAddr = 32'h0;
+      outputPort = 32'h0;
+*/
+  // Pipelines
+  pipeRegIFID ifid(CLK, nRST, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, dpif.imemload, 0, incPC, pc, 0,0,0,0, ifidValue);
+  pipeRegIDEX idex(CLK, nRST, countIf.branch, countIf.WEN, countIf.aluSrc, countIf.jmp, countIf.jl, countIf.jmpReg, countIf.memToReg, countIf.dREN, countIf.dWEN, countIf.lui, countIf.bne, countIf.zeroExt, countIf.shiftSel, countIf.aluCont, countIf.aluOp, ifidValue.instr, 0, ifidValue.incPC, ifidValue.pc, rfif.rdat1, rfif.rdat2, 0, 0, idexValue);
+  pipeRegEXMEM exmem(CLK, nRST, /*Input*/ exmemValue);
+  pipeRegMEMWB memwb(CLK, nRST, /*Input*/ memwbValue);
 
   // Datapath blocks
   register_file rf (CLK, nRST, rfif);
-  programCounter progCount (pc, dpif.imemload, extendOut, rfif.rdat1, aluf.zero, countIf, newPC);
+  programCounter progCount (pc, idexValue.instr, idexValue.extendOut, idexValue.rdat1, aluf.zero, idexValue.branch, idexValue.WEN, idexValue.aluSrc, idexValue.jmp, idexValue.jl, idexValue.jmpReg, idexValue.memToReg, idexValue.dREN, idexValue.dWEN, idexValue.lui, idexValue.bne, idexValue.zeroExt, idexValue.shiftSel, idexValue.aluCont, idexValue.aluOp, newPC, incPC);
   alu_file alu(aluf);
   control controler (dpif.imemload, countIf, dpif.dhit, dpif.ihit);
   requestUnit request(CLK, nRST, countIf.dREN, countIf.dWEN, dpif.ihit, dpif.dhit, dpif.dmemREN, dpif.dmemWEN);
@@ -54,20 +88,24 @@ module datapath (
   		dpif.halt = 1;
   	end
   end
-  
-  /*
-  always_comb begin
-  	if (dpif.imemload == 32'hffffffff) begin
-  		dpif.halt = 1;
-  		//dpif.flushed = 1;
-  	end
-  	else begin
-  		dpif.halt = 0;
-  		//dpif.flushed = 0;
-  	end
-  end
-  */
   /********** Halt Signal **********/
+
+
+  // Program counter and update when ihit
+    assign dpif.imemaddr = pc;
+    always_ff @(posedge CLK or negedge nRST) begin
+      if (nRST == 0) begin
+        pc <= PC_INIT;
+      end
+      else begin  
+        if (dpif.ihit == 1) begin
+          pc <= newPC;        
+        end
+        else begin
+          pc <= pc;
+        end
+      end    
+    end
 
 
   /********** ALU Inputs **********/
@@ -118,21 +156,7 @@ module datapath (
   /********** Register Inputs **********/
 
 
-  // Program counter and update when ihit
-  	assign dpif.imemaddr = pc;
-  	always_ff @(posedge CLK or negedge nRST) begin
-	    if (nRST == 0) begin
-	      pc <= PC_INIT;
-	    end
-	    else begin  
-	    	if (dpif.ihit == 1) begin
-		    	pc <= newPC;	      
-	    	end
-	    	else begin
-	    		pc <= pc;
-	    	end
-	    end	   
-  	end
+
 
 
   	// Zero or Sign Extend Unit
