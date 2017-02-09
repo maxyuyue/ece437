@@ -35,10 +35,18 @@
         end	   
     end
 
-  always_ff @(negedge CLK) 
+  always_ff @(negedge CLK or negedge nRST) 
     begin
-      rfif.rdat1 <= regs[rfif.rsel1];
-      rfif.rdat2 <= regs[rfif.rsel2];
+      if(nRST == 0)
+        begin
+          rfif.rdat1 <= 32'b0;
+          rfif.rdat2 <= 32'b0;
+        end
+      else
+        begin
+          rfif.rdat1 <= regs[rfif.rsel1];
+          rfif.rdat2 <= regs[rfif.rsel2];
+        end 
     end
  
 endmodule
