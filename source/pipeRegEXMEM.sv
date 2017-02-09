@@ -48,13 +48,7 @@ module pipeRegEXMEM(
       prEXMEM_out.rdat2 = 32'h0;
       prEXMEM_out.outputPort = 32'h0;
     end
-  end
-
-
-  always_ff @(negedge CLK) 
-  begin
-    if(enable) 
-    begin
+    else if (enable == 1) begin
       prEXMEM_out.regDst = prEXMEM_in.regDst;
       prEXMEM_out.branch = prEXMEM_in.branch;
       prEXMEM_out.WEN = prEXMEM_in.WEN;
@@ -76,7 +70,8 @@ module pipeRegEXMEM(
       prEXMEM_out.pc = prEXMEM_in.pc;
       prEXMEM_out.rdat1 = prEXMEM_in.rdat1;
       prEXMEM_out.rdat2 = prEXMEM_in.rdat2;
-      prEXMEM_out.outputPort = prEXMEM_in.outputPort;      
+      prEXMEM_out.outputPort = prEXMEM_in.outputPort; 
     end
   end
+
 endmodule

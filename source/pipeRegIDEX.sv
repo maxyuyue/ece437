@@ -48,13 +48,7 @@ module pipeRegIDEX (
       prIDEX_out.rdat2 = 32'h0;
       prIDEX_out.outputPort = 32'h0;
     end
-  end
-
-
-  always_ff @(negedge CLK) 
-  begin
-    if(enable) 
-    begin
+    else if (enable == 1) begin
       prIDEX_out.regDst = prIDEX_in.regDst;
       prIDEX_out.branch = prIDEX_in.branch;
       prIDEX_out.WEN = prIDEX_in.WEN;
@@ -76,7 +70,8 @@ module pipeRegIDEX (
       prIDEX_out.pc = prIDEX_in.pc;
       prIDEX_out.rdat1 = prIDEX_in.rdat1;
       prIDEX_out.rdat2 = prIDEX_in.rdat2;
-      prIDEX_out.outputPort = prIDEX_in.outputPort;      
+      prIDEX_out.outputPort = prIDEX_in.outputPort;
     end
   end
+
 endmodule

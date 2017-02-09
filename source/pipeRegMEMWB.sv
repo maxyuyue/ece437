@@ -48,13 +48,7 @@ module pipeRegMEMWB(
       prMEMWB_out.rdat2 = 32'h0;
       prMEMWB_out.outputPort = 32'h0;
     end
-  end
-
-
-  always_ff @(negedge CLK) 
-  begin
-    if(enable) 
-    begin
+    else if (enable == 1) begin
       prMEMWB_out.regDst = prMEMWB_in.regDst;
       prMEMWB_out.branch = prMEMWB_in.branch;
       prMEMWB_out.WEN = prMEMWB_in.WEN;
@@ -76,7 +70,8 @@ module pipeRegMEMWB(
       prMEMWB_out.pc = prMEMWB_in.pc;
       prMEMWB_out.rdat1 = prMEMWB_in.rdat1;
       prMEMWB_out.rdat2 = prMEMWB_in.rdat2;
-      prMEMWB_out.outputPort = prMEMWB_in.outputPort;      
+      prMEMWB_out.outputPort = prMEMWB_in.outputPort; 
     end
   end
+
 endmodule

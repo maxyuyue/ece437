@@ -41,35 +41,30 @@ module pipeRegIFID(
       prIFID_out.rdat2 = 32'h0;
       prIFID_out.outputPort = 32'h0;
     end
+    else if (enable == 1) begin
+      prIFID_out.regDst = prIFID_in.regDst;
+      prIFID_out.branch = prIFID_in.branch;
+      prIFID_out.WEN = prIFID_in.WEN;
+      prIFID_out.aluSrc = prIFID_in.aluSrc;
+      prIFID_out.jmp = prIFID_in.jmp;
+      prIFID_out.jl = prIFID_in.jl;
+      prIFID_out.jmpReg = prIFID_in.jmpReg;
+      prIFID_out.memToReg = prIFID_in.memToReg;
+      prIFID_out.dREN = prIFID_in.dREN;
+      prIFID_out.dWEN = prIFID_in.dWEN;
+      prIFID_out.lui = prIFID_in.lui;
+      prIFID_out.bne = prIFID_in.bne;
+      prIFID_out.zeroExt = prIFID_in.zeroExt;
+      prIFID_out.shiftSel = prIFID_in.shiftSel;
+      prIFID_out.aluCont = prIFID_in.aluCont;
+      prIFID_out.aluOp = prIFID_in.aluOp;
+      prIFID_out.instr = prIFID_in.instr;
+      prIFID_out.incPC = prIFID_in.incPC;
+      prIFID_out.pc = prIFID_in.pc;
+      prIFID_out.rdat1 = prIFID_in.rdat1;
+      prIFID_out.rdat2 = prIFID_in.rdat2;
+      prIFID_out.outputPort = prIFID_in.outputPort;    
+    end
   end
 
-
-  always_ff @(negedge CLK) 
-  begin
-    if(enable == 1 && nRST == 1) 
-    begin
-     prIFID_out.regDst = prIFID_in.regDst;
-     prIFID_out.branch = prIFID_in.branch;
-     prIFID_out.WEN = prIFID_in.WEN;
-     prIFID_out.aluSrc = prIFID_in.aluSrc;
-     prIFID_out.jmp = prIFID_in.jmp;
-     prIFID_out.jl = prIFID_in.jl;
-     prIFID_out.jmpReg = prIFID_in.jmpReg;
-     prIFID_out.memToReg = prIFID_in.memToReg;
-     prIFID_out.dREN = prIFID_in.dREN;
-     prIFID_out.dWEN = prIFID_in.dWEN;
-     prIFID_out.lui = prIFID_in.lui;
-     prIFID_out.bne = prIFID_in.bne;
-     prIFID_out.zeroExt = prIFID_in.zeroExt;
-     prIFID_out.shiftSel = prIFID_in.shiftSel;
-     prIFID_out.aluCont = prIFID_in.aluCont;
-     prIFID_out.aluOp = prIFID_in.aluOp;
-     prIFID_out.instr = prIFID_in.instr;
-     prIFID_out.incPC = prIFID_in.incPC;
-     prIFID_out.pc = prIFID_in.pc;
-     prIFID_out.rdat1 = prIFID_in.rdat1;
-     prIFID_out.rdat2 = prIFID_in.rdat2;
-     prIFID_out.outputPort = prIFID_in.outputPort;    
-   end
- end
 endmodule
