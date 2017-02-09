@@ -46,7 +46,7 @@ module pipeRegIFID(
 
   always_ff @(negedge CLK) 
   begin
-    if(enable) 
+    if(enable == 1 && nRST == 1) 
     begin
      prIFID_out.regDst = prIFID_in.regDst;
      prIFID_out.branch = prIFID_in.branch;

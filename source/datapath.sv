@@ -41,8 +41,16 @@ module datapath (
   //input signal interfaces to pipeline registers
   pipe_reg_if ifid_input(), idex_input(), exmem_input(), memwb_input();
 
-  assign opC = opcode_t'(dpif.imemload [31:26]);
-  assign func = funct_t'(dpif.imemload[5:0]);
+  always_ff @(posedge CLK or negedge nRST) begin
+    if (nRST == 0 ) begin
+      opC = opcode_t'(6'b000000);
+      func = funct_t'(6'b000000);
+    end
+    else if (dpif.ihit == 1) begin
+      opC = opcode_t'(dpif.imemload [31:26]);
+      func = funct_t'(dpif.imemload[5:0]);
+    end
+  end
 
   //IFID pipeline register input
   assign ifid_input.regDst = 0;
