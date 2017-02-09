@@ -31,8 +31,8 @@ module datapath (
   // Declared connections and variables
   word_t	pc, newPC, incPC;
   word_t 	extendOut;
-  opcode_t opC;
-  funct_t func;
+  opcode_t opC, opCifid, opCidex, opCexmem, opCmemwb;
+  funct_t func, funcifid, funcidex, funcexmem, funcmemwb;
 
   logic memwbEnable;
 
@@ -45,10 +45,26 @@ module datapath (
     if (nRST == 0 ) begin
       opC = opcode_t'(6'b000000);
       func = funct_t'(6'b000000);
+      opCifid = opcode_t'(6'b000000);
+      funcifid = funct_t'(6'b000000);
+      opCidex = opcode_t'(6'b000000);
+      funcidex = funct_t'(6'b000000);
+      opCexmem = opcode_t'(6'b000000);
+      funcexmem = funct_t'(6'b000000);
+      opCmemwb = opcode_t'(6'b000000);
+      funcmemwb = funct_t'(6'b000000);
     end
     else if (dpif.ihit == 1) begin
       opC = opcode_t'(dpif.imemload [31:26]);
       func = funct_t'(dpif.imemload[5:0]);
+      opCifid = opcode_t'(dpif.imemload [31:26]);
+      funcifid = funct_t'(dpif.imemload[5:0]);
+      opCidex = opcode_t'(ifidValue.instr[31:26]);
+      funcidex = funct_t'(ifidValue.instr[5:0]);
+      opCexmem = opcode_t'(idexValue.instr [31:26]);
+      funcexmem = funct_t'(idexValue.instr[5:0]);
+      opCmemwb = opcode_t'(exmemValue.instr [31:26]);
+      funcmemwb = funct_t'(exmemValue.instr[5:0]);
     end
   end
 
@@ -75,6 +91,7 @@ module datapath (
   assign ifid_input.rdat1 = 32'h0;
   assign ifid_input.rdat2 = 32'h0;
   assign ifid_input.outputPort = 32'h0;
+
 
 
   //IDEX pipeline register input
@@ -222,15 +239,15 @@ module datapath (
     end
     else begin
       if (memwbValue.regDst == 1)
-        rfif.wsel = dpif.imemload[15:11];
+        rfif.wsel = memwbValue.instr[15:11];
       else
-        rfif.wsel = dpif.imemload[20:16];
+        rfif.wsel = memwbValue.instr[20:16];
     end
   end
 
   always_comb begin // wdat inputs
     if (memwbValue.lui == 1) 
-      rfif.wdat = {dpif.imemload[15:0],16'b0000000000000000};
+      rfif.wdat = {memwbValue.instr[15:0],16'b0000000000000000};
     else begin
       if (memwbValue.jl == 1)
         rfif.wdat = pc +4;
@@ -248,10 +265,10 @@ module datapath (
   /********** Zero or Sign Extend Unit **********/
   always_comb begin
       if (idexValue.zeroExt == 0) begin // sign extend
-        extendOut = {dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15],dpif.imemload[15:0]};
+        extendOut = {idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15],idexValue.instr[15:0]};
       end
       else begin // zero extend
-        extendOut = {16'b0000000000000000,dpif.imemload[15:0]};
+        extendOut = {16'b0000000000000000,idexValue.instr[15:0]};
       end 
   end
   /********** Zero or Sign Extend Unit **********/
