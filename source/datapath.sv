@@ -41,7 +41,8 @@ module datapath (
   //input signal interfaces to pipeline registers
   pipe_reg_if ifid_input(), idex_input(), exmem_input(), memwb_input();
 
-  always_ff @(posedge CLK or negedge CLK or negedge nRST) begin // Just for debugging
+/*
+  always_ff @(CLK or negedge nRST) begin // Just for debugging
     if (nRST == 0 ) begin
       opC = opcode_t'(6'b000000);
       func = funct_t'(6'b000000);
@@ -54,19 +55,23 @@ module datapath (
       opCmemwb = opcode_t'(6'b000000);
       funcmemwb = funct_t'(6'b000000);
     end
-    else if (dpif.ihit == 1) begin
-      opC = opcode_t'(dpif.imemload [31:26]);
-      func = funct_t'(dpif.imemload[5:0]);
-      opCifid = opcode_t'(dpif.imemload [31:26]);
-      funcifid = funct_t'(dpif.imemload[5:0]);
-      opCidex = opcode_t'(ifidValue.instr[31:26]);
-      funcidex = funct_t'(ifidValue.instr[5:0]);
-      opCexmem = opcode_t'(idexValue.instr [31:26]);
-      funcexmem = funct_t'(idexValue.instr[5:0]);
-      opCmemwb = opcode_t'(exmemValue.instr [31:26]);
-      funcmemwb = funct_t'(exmemValue.instr[5:0]);
-    end
-  end
+    else if (dpif.ihit == 1) begin*/
+      always_comb begin
+        if (dpif.ihit == 1) begin
+          opC = opcode_t'(dpif.imemload [31:26]);
+          func = funct_t'(dpif.imemload[5:0]);
+          opCifid = opcode_t'(dpif.imemload [31:26]);
+          funcifid = funct_t'(dpif.imemload[5:0]);
+          opCidex = opcode_t'(ifidValue.instr[31:26]);
+          funcidex = funct_t'(ifidValue.instr[5:0]);
+          opCexmem = opcode_t'(idexValue.instr [31:26]);
+          funcexmem = funct_t'(idexValue.instr[5:0]);
+          opCmemwb = opcode_t'(exmemValue.instr [31:26]);
+          funcmemwb = funct_t'(exmemValue.instr[5:0]);
+        end
+      end
+   /* end
+  end*/
 
   //IFID pipeline register input
   assign ifid_input.regDst = 0;
