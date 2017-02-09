@@ -47,6 +47,7 @@ module pipeRegIDEX (
       prIDEX_out.rdat1 = 32'h0;
       prIDEX_out.rdat2 = 32'h0;
       prIDEX_out.outputPort = 32'h0;
+      prIDEX_out.dmemload = 32'h0;
     end
     else if (enable == 1) begin
       prIDEX_out.regDst = prIDEX_in.regDst;
@@ -71,6 +72,7 @@ module pipeRegIDEX (
       prIDEX_out.rdat1 = prIDEX_in.rdat1;
       prIDEX_out.rdat2 = prIDEX_in.rdat2;
       prIDEX_out.outputPort = prIDEX_in.outputPort;
+      prIDEX_out.dmemload = prIDEX_in.dmemload;
     end
   end
 

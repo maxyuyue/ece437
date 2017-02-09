@@ -75,12 +75,17 @@ add wave -noupdate /system_tb/DUT/CPU/DP/aluf/outputPort
 add wave -noupdate -divider exmem
 add wave -noupdate /system_tb/DUT/CPU/DP/opCexmem
 add wave -noupdate /system_tb/DUT/CPU/DP/funcexmem
+add wave -noupdate -divider exmem_out
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/dREN
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/outputPort
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/dmemload
 add wave -noupdate -divider memwb
 add wave -noupdate /system_tb/DUT/CPU/DP/opCmemwb
 add wave -noupdate /system_tb/DUT/CPU/DP/funcmemwb
 add wave -noupdate /system_tb/DUT/CPU/DP/countIf/shiftSel
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/instr
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {40000 ps} 0}
+WaveRestoreCursors {{Cursor 1} {31732 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 132

@@ -26,7 +26,7 @@ interface pipe_reg_if;
 
   logic   dhit, ihit, halt;
 
-  word_t instr, incPC, pc, rdat1, rdat2, outputPort;
+  word_t instr, incPC, pc, rdat1, rdat2, outputPort, dmemload;
 
 endinterface
 

@@ -96,6 +96,7 @@ module datapath (
   assign ifid_input.rdat1 = 32'h0;
   assign ifid_input.rdat2 = 32'h0;
   assign ifid_input.outputPort = 32'h0;
+  assign ifid_input.dmemload = 32'h0;
 
 
 
@@ -121,7 +122,8 @@ module datapath (
   assign idex_input.pc = ifidValue.pc;
   assign idex_input.rdat1 = rfif.rdat1;
   assign idex_input.rdat2 = rfif.rdat2;
-  assign idex_input.outputPort = 32'b0;
+  assign idex_input.outputPort = 32'h0;
+  assign idex_input.dmemload = 32'h0;
 
 
   //EXMEM pipeline register input
@@ -147,6 +149,7 @@ module datapath (
   assign exmem_input.rdat1 = idexValue.rdat1;
   assign exmem_input.rdat2 = idexValue.rdat2;
   assign exmem_input.outputPort = aluf.outputPort;
+  assign exmem_input.dmemload = 32'h0;
 
 
   //MEMWB pipeline register input
@@ -172,6 +175,7 @@ module datapath (
   assign memwb_input.rdat1 = exmemValue.rdat1;
   assign memwb_input.rdat2 = exmemValue.rdat2;
   assign memwb_input.outputPort = exmemValue.outputPort;
+  assign memwb_input.dmemload = dpif.dmemload;
 
 
   // Control Interface for Program Counter
@@ -258,7 +262,7 @@ module datapath (
         rfif.wdat = memwbValue.pc +4;
       else begin
         if (memwbValue.memToReg == 1)
-          rfif.wdat = dpif.dmemload;
+          rfif.wdat = memwb_input.dmemload;
         else 
           rfif.wdat = memwbValue.outputPort;
       end

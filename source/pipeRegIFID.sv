@@ -40,6 +40,7 @@ module pipeRegIFID(
       prIFID_out.rdat1 = 32'h0;
       prIFID_out.rdat2 = 32'h0;
       prIFID_out.outputPort = 32'h0;
+      prIFID_out.dmemload = 32'h0;
     end
     else if (enable == 1) begin
       prIFID_out.regDst = prIFID_in.regDst;
@@ -63,7 +64,8 @@ module pipeRegIFID(
       prIFID_out.pc = prIFID_in.pc;
       prIFID_out.rdat1 = prIFID_in.rdat1;
       prIFID_out.rdat2 = prIFID_in.rdat2;
-      prIFID_out.outputPort = prIFID_in.outputPort;    
+      prIFID_out.outputPort = prIFID_in.outputPort;   
+      prIFID_out.dmemload = prIFID_in.dmemload; 
     end
   end
 

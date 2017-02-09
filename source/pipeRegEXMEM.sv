@@ -47,6 +47,7 @@ module pipeRegEXMEM(
       prEXMEM_out.rdat1 = 32'h0;
       prEXMEM_out.rdat2 = 32'h0;
       prEXMEM_out.outputPort = 32'h0;
+      prEXMEM_out.dmemload = 32'h0;
     end
     else if (enable == 1) begin
       prEXMEM_out.regDst = prEXMEM_in.regDst;
@@ -71,6 +72,7 @@ module pipeRegEXMEM(
       prEXMEM_out.rdat1 = prEXMEM_in.rdat1;
       prEXMEM_out.rdat2 = prEXMEM_in.rdat2;
       prEXMEM_out.outputPort = prEXMEM_in.outputPort; 
+      prEXMEM_out.dmemload = prEXMEM_in.dmemload;
     end
   end
 

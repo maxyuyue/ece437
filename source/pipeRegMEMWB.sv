@@ -47,6 +47,7 @@ module pipeRegMEMWB(
       prMEMWB_out.rdat1 = 32'h0;
       prMEMWB_out.rdat2 = 32'h0;
       prMEMWB_out.outputPort = 32'h0;
+      prMEMWB_out.dmemload = 32'h0;
     end
     else if (enable == 1) begin
       prMEMWB_out.regDst = prMEMWB_in.regDst;
@@ -71,6 +72,7 @@ module pipeRegMEMWB(
       prMEMWB_out.rdat1 = prMEMWB_in.rdat1;
       prMEMWB_out.rdat2 = prMEMWB_in.rdat2;
       prMEMWB_out.outputPort = prMEMWB_in.outputPort; 
+      prMEMWB_out.dmemload = prMEMWB_in.dmemload;
     end
   end
 

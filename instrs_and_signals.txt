@@ -386,7 +386,7 @@ LUI    $rt,imm       R[rt] <= {imm,16b'0}		-- TODO
 		zeroExt = X
 		lui = 1
 
-LW     $rt,imm($rs)  R[rt] <= M[R[rs] + SignExtImm]
+     $rt,imm($rs)  R[rt] <= M[R[rs] + SignExtImm]
 	[100011] [sssss] [ttttt] [iiiiiiiiiiiiiiii]
 		RegDst = 0
 		Branch = 0
