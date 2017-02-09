@@ -52,24 +52,23 @@ prIFID.regDst = 0;
       prIFID.shiftSel = 0;
       prIFID.aluCont = 0;
       prIFID.aluOp = 0;
+      
       instr = 32'h0;
-      extendOut = 32'h0;
       incPC = 32'h0;
       pc = 32'h0;
       rdat1 = 32'h0;
       rdat2 = 32'h0;
-      jmpAddr = 32'h0;
       outputPort = 32'h0;
 */
   // Pipelines
-  pipeRegIFID ifid(CLK, nRST, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, dpif.imemload, 0, incPC, pc, 0,0,0,0, ifidValue);
-  pipeRegIDEX idex(CLK, nRST, countIf.branch, countIf.WEN, countIf.aluSrc, countIf.jmp, countIf.jl, countIf.jmpReg, countIf.memToReg, countIf.dREN, countIf.dWEN, countIf.lui, countIf.bne, countIf.zeroExt, countIf.shiftSel, countIf.aluCont, countIf.aluOp, ifidValue.instr, 0, ifidValue.incPC, ifidValue.pc, rfif.rdat1, rfif.rdat2, 0, 0, idexValue);
-  pipeRegEXMEM exmem(CLK, nRST, /*Input*/ exmemValue);
+  pipeRegIFID ifid(CLK, nRST, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, dpif.imemload, incPC, pc, 0,0,0, ifidValue, dpif.ihit, 0);
+  pipeRegIDEX idex(CLK, nRST, countIf.branch, countIf.WEN, countIf.aluSrc, countIf.jmp, countIf.jl, countIf.jmpReg, countIf.memToReg, countIf.dREN, countIf.dWEN, countIf.lui, countIf.bne, countIf.zeroExt, countIf.shiftSel, countIf.aluCont, countIf.aluOp, ifidValue.instr, ifidValue.incPC, ifidValue.pc, rfif.rdat1, rfif.rdat2, 0, idexValue, dpif.ihit, 0);
+  pipeRegEXMEM exmem(CLK, nRST, idexValue.branch, idexValue.WEN, idexValue.aluSrc, idexValue.jmp, idexValue.jl, idexValue.jmpReg, idexValue.memToReg, idexValue.dREN, idexValue.dWEN, idexValue.lui, idexValue.bne, idexValue.zeroExt, idexValue.shiftSel, idexValue.aluCont, idexValue.aluOp, idexValue.instr,  idexValue.incPC, idexValue.pc, idexValue.rdat1, idexValue.rdat2, aluf.outputPort, exmemValue, dpif.ihit, 0);
   pipeRegMEMWB memwb(CLK, nRST, /*Input*/ memwbValue);
 
   // Datapath blocks
   register_file rf (CLK, nRST, rfif);
-  programCounter progCount (pc, idexValue.instr, idexValue.extendOut, idexValue.rdat1, aluf.zero, idexValue.branch, idexValue.WEN, idexValue.aluSrc, idexValue.jmp, idexValue.jl, idexValue.jmpReg, idexValue.memToReg, idexValue.dREN, idexValue.dWEN, idexValue.lui, idexValue.bne, idexValue.zeroExt, idexValue.shiftSel, idexValue.aluCont, idexValue.aluOp, newPC, incPC);
+  programCounter progCount (pc, idexValue.instr, extendOut, idexValue.rdat1, aluf.zero, idexValue.branch, idexValue.WEN, idexValue.aluSrc, idexValue.jmp, idexValue.jl, idexValue.jmpReg, idexValue.memToReg, idexValue.dREN, idexValue.dWEN, idexValue.lui, idexValue.bne, idexValue.zeroExt, idexValue.shiftSel, idexValue.aluCont, idexValue.aluOp, newPC, incPC);
   alu_file alu(aluf);
   control controler (dpif.imemload, countIf, dpif.dhit, dpif.ihit);
   requestUnit request(CLK, nRST, countIf.dREN, countIf.dWEN, dpif.ihit, dpif.dhit, dpif.dmemREN, dpif.dmemWEN);
