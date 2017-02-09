@@ -209,7 +209,7 @@ module datapath (
   register_file rf (CLK, nRST, rfif);
   programCounter progCount (pc, idexValue.instr, extendOut, idexValue.rdat1, aluf.zero, countIfPC, newPC, incPC);
   alu_file alu(aluf);
-  control controler (idexValue.instr, countIf, dpif.dhit, dpif.ihit);
+  control controler (ifidValue.instr, countIf, dpif.dhit, dpif.ihit);
 
 
   assign dpif.imemREN = 1; // TODO: Pass halt signal through registers ~memwbValue.halt;
