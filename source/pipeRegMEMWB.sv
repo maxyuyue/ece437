@@ -14,7 +14,8 @@ module pipeRegMEMWB(
   input logic CLK, nRST,
   //two instances of the pipe_reg_if --> one as input and other as output
   pipe_reg_if prMEMWB_in,
-  pipe_reg_if prMEMWB_out
+  pipe_reg_if prMEMWB_out,
+  input logic enable, flush
 );
   // import types
   import cpu_types_pkg::*;
@@ -22,7 +23,7 @@ module pipeRegMEMWB(
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || prMEMWB_in.flush = 1) 
+  	if (nRST == 0 || flush = 1) 
       begin	  
         prMEMWB_out.regDst = 0;
         prMEMWB_out.branch = 0;
@@ -52,7 +53,7 @@ module pipeRegMEMWB(
 
 always_ff @(negedge CLK) 
   begin
-    if(prMEMWB_in.enable) 
+    if(enable) 
       begin
         prMEMWB_out.regDst = prMEMWB_in.regDst;
         prMEMWB_out.branch = prMEMWB_in.branch;
