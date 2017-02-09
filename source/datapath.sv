@@ -209,7 +209,7 @@ module datapath (
   assign dpif.imemREN = 1; // TODO: Pass halt signal through registers ~memwbValue.halt;
   assign dpif.dmemstore = exmemValue.rdat2;
   assign dpif.dmemaddr = exmemValue.outputPort;
-  assign memwbEnable = dpif.ihit & dpif.dhit;
+  assign memwbEnable = dpif.ihit | dpif.dhit;
   assign dpif.dmemREN = exmemValue.dREN; // instead of request unit
   assign dpif.dmemWEN = exmemValue.dWEN; // instead of request unit
 
@@ -255,7 +255,7 @@ module datapath (
       rfif.wdat = {memwbValue.instr[15:0],16'b0000000000000000};
     else begin
       if (memwbValue.jl == 1)
-        rfif.wdat = pc +4;
+        rfif.wdat = memwbValue.pc +4;
       else begin
         if (memwbValue.memToReg == 1)
           rfif.wdat = dpif.dmemload;

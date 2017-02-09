@@ -5,10 +5,10 @@
 
   org   0x0000
   ori   $1, $zero, 0xF0
-  nop
-  nop
-  nop
-  nop
+  #nop
+  #nop
+  #nop
+  #nop
   ori   $2, $zero, 0x100
   ori   $3, $zero, 0x200
   ori   $4, $zero, 0x300
