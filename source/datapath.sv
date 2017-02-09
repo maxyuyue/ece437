@@ -103,8 +103,8 @@ prIFID.regDst = 0;
 
 
   /********** Register Inputs **********/
-  assign rfif.rsel1 = ifidValue.imemload[25:21];
-  assign rfif.rsel2 = ifidValue.imemload[20:16];
+  assign rfif.rsel1 = ifidValue.instr[25:21];
+  assign rfif.rsel2 = ifidValue.instr[20:16];
   assign rfif.WEN = memwbValue.WEN;
   always_comb begin //wsel iputs
     if (memwbValue.jl == 1) begin
@@ -153,7 +153,7 @@ prIFID.regDst = 0;
 
   always_comb begin // setting port B
   	if (idexValue.shiftSel == 1)
-  		aluf.portB = idexValue.imemload[10:6];
+  		aluf.portB = idexValue.instr[10:6];
   	else if (idexValue.aluSrc == 1) 
   		aluf.portB = extendOut;
   	else
@@ -167,7 +167,7 @@ prIFID.regDst = 0;
     if (nRST == 0) begin
       dpif.halt = 0;
     end
-    else if (memwbValue.imemload == 32'hffffffff) begin
+    else if (memwbValue.instr == 32'hffffffff) begin
       dpif.halt = 1;
     end
   end
