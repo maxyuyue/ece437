@@ -41,7 +41,7 @@ module datapath (
   //input signal interfaces to pipeline registers
   pipe_reg_if ifid_input(), idex_input(), exmem_input(), memwb_input();
 
-  always_ff @(posedge CLK or negedge nRST) begin
+  always_ff @(posedge CLK or negedge CLK or negedge nRST) begin // Just for debugging
     if (nRST == 0 ) begin
       opC = opcode_t'(6'b000000);
       func = funct_t'(6'b000000);
@@ -255,7 +255,7 @@ module datapath (
         if (memwbValue.memToReg == 1)
           rfif.wdat = dpif.dmemload;
         else 
-          rfif.wdat = aluf.outputPort;
+          rfif.wdat = memwbValue.outputPort;
       end
     end
   end
