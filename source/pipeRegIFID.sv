@@ -33,7 +33,7 @@ module pipeRegIFID(
       prIFID_out.zeroExt = 0;
       prIFID_out.shiftSel = 0;
       prIFID_out.aluCont = 0;
-      prIFID_out.aluOp = 0;
+      prIFID_out.aluOp = ALU_SLL;
       prIFID_out.instr = 32'h0;
       prIFID_out.incPC = 32'h0;
       prIFID_out.pc = 32'h0;

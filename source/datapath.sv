@@ -24,14 +24,16 @@ module datapath (
   parameter PC_INIT = 0;
 
   // Declared interfaces 
-  control_if countIf();
+  control_if countIf(), countIfPC();
   register_file_if rfif();
   alu_file_if aluf ();
 
   // Declared connections and variables
   word_t	pc, newPC, incPC;
   word_t 	extendOut;
-  r_t rType;
+  opcode_t opC;
+  funct_t func;
+
   logic memwbEnable;
 
   //output signal interfaces from pipeline registers
@@ -39,122 +41,144 @@ module datapath (
   //input signal interfaces to pipeline registers
   pipe_reg_if ifid_input(), idex_input(), exmem_input(), memwb_input();
 
+  assign opC = opcode_t'(dpif.imemload [31:26]);
+  assign func = funct_t'(dpif.imemload[5:0]);
+
   //IFID pipeline register input
-  ifid_input.regDst = 0;
-  ifid_input.branch = 0;.
-  ifid_input.WEN = 0;
-  ifid_input.aluSrc = 0;
-  ifid_input.jmp = 0;
-  ifid_input.jl = 0;
-  ifid_input.jmpReg = 0;
-  ifid_input.memToReg = 0;
-  ifid_input.dREN = 0;
-  ifid_input.dWEN = 0;
-  ifid_input.lui = 0;
-  ifid_input.bne = 0;
-  ifid_input.zeroExt = 0;
-  ifid_input.shiftSel = 0;
-  ifid_input.aluCont = 0;
-  ifid_input.aluOp = 0;
-  ifid_input.instr = dpif.imemload;
-  ifid_input.incPC = incPC;
-  ifid_input.pc = pc;
-  ifid_input.rdat1 = 32'h0;
-  ifid_input.rdat2 = 32'h0;
-  ifid_input.outputPort = 32'h0;
+  assign ifid_input.regDst = 0;
+  assign ifid_input.branch = 0;
+  assign ifid_input.WEN = 0;
+  assign ifid_input.aluSrc = 0;
+  assign ifid_input.jmp = 0;
+  assign ifid_input.jl = 0;
+  assign ifid_input.jmpReg = 0;
+  assign ifid_input.memToReg = 0;
+  assign ifid_input.dREN = 0;
+  assign ifid_input.dWEN = 0;
+  assign ifid_input.lui = 0;
+  assign ifid_input.bne = 0;
+  assign ifid_input.zeroExt = 0;
+  assign ifid_input.shiftSel = 0;
+  assign ifid_input.aluCont = 0;
+  assign ifid_input.aluOp = ALU_SLL;
+  assign ifid_input.instr = dpif.imemload;
+  assign ifid_input.incPC = incPC;
+  assign ifid_input.pc = pc;
+  assign ifid_input.rdat1 = 32'h0;
+  assign ifid_input.rdat2 = 32'h0;
+  assign ifid_input.outputPort = 32'h0;
 
 
   //IDEX pipeline register input
-  idex_input.regDst = countif.regDst;
-  idex_input.branch = countif.branch;
-  idex_input.WEN = countif.WEN;
-  idex_input.aluSrc = countif.aluSrc;
-  idex_input.jmp = countif.jmp;
-  idex_input.jl = countif.jl;
-  idex_input.jmpReg = countif.jmpReg;
-  idex_input.memToReg = countif.memToReg;
-  idex_input.dREN = countif.dREN;
-  idex_input.dWEN = countif.dWEN;
-  idex_input.lui = countif.lui;
-  idex_input.bne = countif.bne;
-  idex_input.zeroExt = countif.zeroExt;
-  idex_input.shiftSel = countif.shiftSel;
-  idex_input.aluCont = countif.aluCont;
-  idex_input.aluOp = countif.aluOp;
-  idex_input.instr = ifidValue.instr;
-  idex_input.incPC = ifidValue.incPC;
-  idex_input.pc = ifidValue.pc;
-  idex_input.rdat1 = rfif.rdat1;
-  idex_input.rdat2 = rfif.rdat2;
-  idex_input.outputPort = 32'b0;
+  assign idex_input.regDst = countIf.regDst;
+  assign idex_input.branch = countIf.branch;
+  assign idex_input.WEN = countIf.WEN;
+  assign idex_input.aluSrc = countIf.aluSrc;
+  assign idex_input.jmp = countIf.jmp;
+  assign idex_input.jl = countIf.jl;
+  assign idex_input.jmpReg = countIf.jmpReg;
+  assign idex_input.memToReg = countIf.memToReg;
+  assign idex_input.dREN = countIf.dREN;
+  assign idex_input.dWEN = countIf.dWEN;
+  assign idex_input.lui = countIf.lui;
+  assign idex_input.bne = countIf.bne;
+  assign idex_input.zeroExt = countIf.zeroExt;
+  assign idex_input.shiftSel = countIf.shiftSel;
+  assign idex_input.aluCont = countIf.aluCont;
+  assign idex_input.aluOp = countIf.aluOp;
+  assign idex_input.instr = ifidValue.instr;
+  assign idex_input.incPC = ifidValue.incPC;
+  assign idex_input.pc = ifidValue.pc;
+  assign idex_input.rdat1 = rfif.rdat1;
+  assign idex_input.rdat2 = rfif.rdat2;
+  assign idex_input.outputPort = 32'b0;
 
 
   //EXMEM pipeline register input
-  exmem_input.regDst = idexValue.regDst;
-  exmem_input.branch = idexValue.branch;
-  exmem_input.WEN = idexValue.WEN;
-  exmem_input.aluSrc = idexValue.aluSrc;
-  exmem_input.jmp = idexValue.jmp;
-  exmem_input.jl = idexValue.jl;
-  exmem_input.jmpReg = idexValue.jmpReg;
-  exmem_input.memToReg = idexValue.memToReg;
-  exmem_input.dREN = idexValue.dREN;
-  exmem_input.dWEN = idexValue.dWEN;
-  exmem_input.lui = idexValue.lui;
-  exmem_input.bne = idexValue.bne;
-  exmem_input.zeroExt = idexValue.zeroExt;
-  exmem_input.shiftSel = idexValue.shiftSel;
-  exmem_input.aluCont = idexValue.aluCont;
-  exmem_input.aluOp = idexValue.aluOp;
-  exmem_input.instr = idexValue.instr;
-  exmem_input.incPC = idexValue.incPC;
-  exmem_input.pc = idexValue.pc;
-  exmem_input.rdat1 = idexValue.rdat1;
-  exmem_input.rdat2 = idexValue.rdat2;
-  exmem_input.outputPort = aluf.outputPort;
+  assign exmem_input.regDst = idexValue.regDst;
+  assign exmem_input.branch = idexValue.branch;
+  assign exmem_input.WEN = idexValue.WEN;
+  assign exmem_input.aluSrc = idexValue.aluSrc;
+  assign exmem_input.jmp = idexValue.jmp;
+  assign exmem_input.jl = idexValue.jl;
+  assign exmem_input.jmpReg = idexValue.jmpReg;
+  assign exmem_input.memToReg = idexValue.memToReg;
+  assign exmem_input.dREN = idexValue.dREN;
+  assign exmem_input.dWEN = idexValue.dWEN;
+  assign exmem_input.lui = idexValue.lui;
+  assign exmem_input.bne = idexValue.bne;
+  assign exmem_input.zeroExt = idexValue.zeroExt;
+  assign exmem_input.shiftSel = idexValue.shiftSel;
+  assign exmem_input.aluCont = idexValue.aluCont;
+  assign exmem_input.aluOp = idexValue.aluOp;
+  assign exmem_input.instr = idexValue.instr;
+  assign exmem_input.incPC = idexValue.incPC;
+  assign exmem_input.pc = idexValue.pc;
+  assign exmem_input.rdat1 = idexValue.rdat1;
+  assign exmem_input.rdat2 = idexValue.rdat2;
+  assign exmem_input.outputPort = aluf.outputPort;
 
 
   //MEMWB pipeline register input
-  memwb_input.regDst = exmemValue.regDst;
-  memwb_input.branch = exmemValue.branch;
-  memwb_input.WEN = exmemValue.WEN;
-  memwb_input.aluSrc = exmemValue.aluSrc;
-  memwb_input.jmp = exmemValue.jmp;
-  memwb_input.jl = exmemValue.jl;
-  memwb_input.jmpReg = exmemValue.jmpReg;
-  memwb_input.memToReg = exmemValue.memToReg;
-  memwb_input.dREN = exmemValue.dREN;
-  memwb_input.dWEN = exmemValue.dWEN;
-  memwb_input.lui = exmemValue.lui;
-  memwb_input.bne = exmemValue.bne;
-  memwb_input.zeroExt = exmemValue.zeroExt;
-  memwb_input.shiftSel = exmemValue.shiftSel;
-  memwb_input.aluCont = exmemValue.aluCont;
-  memwb_input.aluOp = exmemValue.aluOp;
-  memwb_input.instr = exmemValue.instr;
-  memwb_input.incPC = exmemValue.incPC;
-  memwb_input.pc = exmemValue.pc;
-  memwb_input.rdat1 = exmemValue.rdat1;
-  memwb_input.rdat2 = exmemValue.rdat2;
-  memwb_input.outputPort = exmemValue.outputPort;
+  assign memwb_input.regDst = exmemValue.regDst;
+  assign memwb_input.branch = exmemValue.branch;
+  assign memwb_input.WEN = exmemValue.WEN;
+  assign memwb_input.aluSrc = exmemValue.aluSrc;
+  assign memwb_input.jmp = exmemValue.jmp;
+  assign memwb_input.jl = exmemValue.jl;
+  assign memwb_input.jmpReg = exmemValue.jmpReg;
+  assign memwb_input.memToReg = exmemValue.memToReg;
+  assign memwb_input.dREN = exmemValue.dREN;
+  assign memwb_input.dWEN = exmemValue.dWEN;
+  assign memwb_input.lui = exmemValue.lui;
+  assign memwb_input.bne = exmemValue.bne;
+  assign memwb_input.zeroExt = exmemValue.zeroExt;
+  assign memwb_input.shiftSel = exmemValue.shiftSel;
+  assign memwb_input.aluCont = exmemValue.aluCont;
+  assign memwb_input.aluOp = exmemValue.aluOp;
+  assign memwb_input.instr = exmemValue.instr;
+  assign memwb_input.incPC = exmemValue.incPC;
+  assign memwb_input.pc = exmemValue.pc;
+  assign memwb_input.rdat1 = exmemValue.rdat1;
+  assign memwb_input.rdat2 = exmemValue.rdat2;
+  assign memwb_input.outputPort = exmemValue.outputPort;
+
+
+  // Control Interface for Program Counter
+  assign countIfPC.regDst = idexValue.regDst;
+  assign countIfPC.branch = idexValue.branch;
+  assign countIfPC.WEN = idexValue.WEN;
+  assign countIfPC.aluSrc = idexValue.aluSrc;
+  assign countIfPC.jmp = idexValue.jmp;
+  assign countIfPC.jl = idexValue.jl;
+  assign countIfPC.jmpReg = idexValue.jmpReg;
+  assign countIfPC.memToReg = idexValue.memToReg;
+  assign countIfPC.dREN = idexValue.dREN;
+  assign countIfPC.dWEN = idexValue.dWEN;
+  assign countIfPC.lui = idexValue.lui;
+  assign countIfPC.zeroExt = idexValue.zeroExt;
+  assign countIfPC.bne = idexValue.bne;
+  assign countIfPC.shiftSel = idexValue.shiftSel;
+  assign countIfPC.aluCont = idexValue.aluCont;
+  assign countIfPC.aluOp = idexValue.aluOp;
 
 
   // Pipelines
-  pipeRegIFID ifid(CLK, nRST, ifid_input, ifidValue, dpif.ihit, 0);
-  pipeRegIDEX idex(CLK, nRST, idex_input, idexValue, dpif.ihit, 0);
-  pipeRegEXMEM exmem(CLK, nRST, exmem_input, exmemValue, dpif.ihit, 0);
-  pipeRegMEMWB memwb(CLK, nRST, memwb_input, memwbValue, memwbEnable, 0);
+  pipeRegIFID ifid(CLK, nRST, ifid_input, ifidValue, dpif.ihit, 1'b0);
+  pipeRegIDEX idex(CLK, nRST, idex_input, idexValue, dpif.ihit, 1'b0);
+  pipeRegEXMEM exmem(CLK, nRST, exmem_input, exmemValue, dpif.ihit, 1'b0);
+  pipeRegMEMWB memwb(CLK, nRST, memwb_input, memwbValue, memwbEnable, 1'b0);
 
   // Datapath blocks
   register_file rf (CLK, nRST, rfif);
-  programCounter progCount (pc, idexValue.instr, extendOut, idexValue.rdat1, aluf.zero, idexValue.branch, idexValue.WEN, idexValue.aluSrc, idexValue.jmp, idexValue.jl, idexValue.jmpReg, idexValue.memToReg, idexValue.dREN, idexValue.dWEN, idexValue.lui, idexValue.bne, idexValue.zeroExt, idexValue.shiftSel, idexValue.aluCont, idexValue.aluOp, newPC, incPC);
+  programCounter progCount (pc, idexValue.instr, extendOut, idexValue.rdat1, aluf.zero, countIfPC, newPC, incPC);
   alu_file alu(aluf);
   control controler (idexValue.instr, countIf, dpif.dhit, dpif.ihit);
 
 
-  assign dpif.imemREN = ~dpif.halt;
-  assign dpif.dmemstore = rfif.rdat2;
-  assign dpif.dmemaddr = aluf.outputPort;
+  assign dpif.imemREN = 1; // TODO: Pass halt signal through registers ~memwbValue.halt;
+  assign dpif.dmemstore = exmemValue.rdat2;
+  assign dpif.dmemaddr = exmemValue.outputPort;
   assign memwbEnable = dpif.ihit & dpif.dhit;
   assign dpif.dmemREN = exmemValue.dREN; // instead of request unit
   assign dpif.dmemWEN = exmemValue.dWEN; // instead of request unit

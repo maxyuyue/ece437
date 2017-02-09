@@ -40,7 +40,7 @@ module pipeRegIDEX (
       prIDEX_out.zeroExt = 0;
       prIDEX_out.shiftSel = 0;
       prIDEX_out.aluCont = 0;
-      prIDEX_out.aluOp = 0;
+      prIDEX_out.aluOp = ALU_SLL;
       prIDEX_out.instr = 32'h0;
       prIDEX_out.incPC = 32'h0;
       prIDEX_out.pc = 32'h0;

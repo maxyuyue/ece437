@@ -40,7 +40,7 @@ module pipeRegMEMWB(
       prMEMWB_out.zeroExt = 0;
       prMEMWB_out.shiftSel = 0;
       prMEMWB_out.aluCont = 0;
-      prMEMWB_out.aluOp = 0;
+      prMEMWB_out.aluOp = ALU_SLL;
       prMEMWB_out.instr = 32'h0;
       prMEMWB_out.incPC = 32'h0;
       prMEMWB_out.pc = 32'h0;

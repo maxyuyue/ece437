@@ -40,7 +40,7 @@ module pipeRegEXMEM(
       prEXMEM_out.zeroExt = 0;
       prEXMEM_out.shiftSel = 0;
       prEXMEM_out.aluCont = 0;
-      prEXMEM_out.aluOp = 0;
+      prEXMEM_out.aluOp = ALU_SLL;
       prEXMEM_out.instr = 32'h0;
       prEXMEM_out.incPC = 32'h0;
       prEXMEM_out.pc = 32'h0;

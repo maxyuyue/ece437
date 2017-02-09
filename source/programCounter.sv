@@ -18,14 +18,14 @@ module programCounter (
   input word_t pc, imemload, extendOut, rdat1,
   input logic zero,
   control_if countIf,
-  output word_t newPC
+  output word_t newPC, incPC
 
 );
   // import types
   import cpu_types_pkg::*;
 
 
-	word_t	incPC, branchPC, mux1Out, mux2Out;
+	word_t	branchPC, mux1Out, mux2Out;
 
 
   // Mux 1
