@@ -7,7 +7,8 @@ module pipeREGIFID(
   input logic CLK, nRST,
   //two instances of the pipe_reg_if --> one as input and other as output
   pipe_reg_if prIFID_in,
-  pipe_reg_if prIFID_out
+  pipe_reg_if prIFID_out,
+  input logic enable, flush
 );
   // import types
   import cpu_types_pkg::*;
@@ -15,7 +16,7 @@ module pipeREGIFID(
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || prIFID_in.flush = 1) 
+  	if (nRST == 0 || flush = 1) 
       begin	  
         prIFID_out.regDst = 0;
         prIFID_out.branch = 0;
@@ -45,7 +46,7 @@ module pipeREGIFID(
 
 always_ff @(negedge CLK) 
   begin
-    if(prIFID_in.enable) 
+    if(enable) 
       begin
          prIFID_out.regDst = prIFID_in.regDst;
          prIFID_out.branch = prIFID_in.branch;

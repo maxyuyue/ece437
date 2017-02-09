@@ -14,7 +14,8 @@ module pipeRegIDEX (
   input logic CLK, nRST,
   //two instances of the pipe_reg_if --> one as input and other as output
   pipe_reg_if prIDEX_in,
-  pipe_reg_if prIDEX_out
+  pipe_reg_if prIDEX_out,
+  input logic enable, flush 
 );
   // import types
   import cpu_types_pkg::*;
@@ -22,7 +23,7 @@ module pipeRegIDEX (
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || prIDEX_in.flush = 1) 
+  	if (nRST == 0 || flush = 1) 
       begin	  
         prIDEX_out.regDst = 0;
         prIDEX_out.branch = 0;
@@ -52,7 +53,7 @@ module pipeRegIDEX (
 
 always_ff @(negedge CLK) 
   begin
-    if(prIDEX_in.enable) 
+    if(enable) 
       begin
         prIDEX_out.regDst = prIDEX_in.regDst;
         prIDEX_out.branch = prIDEX_in.branch;

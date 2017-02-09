@@ -14,7 +14,8 @@ module pipeRegEXMEM(
   input logic CLK, nRST,
   //two instances of the pipe_reg_if --> one as input and other as output
   pipe_reg_if prEXMEM_in,
-  pipe_reg_if prEXMEM_out
+  pipe_reg_if prEXMEM_out,
+  input logic enable, flush
 );
   // import types
   import cpu_types_pkg::*;
@@ -22,7 +23,7 @@ module pipeRegEXMEM(
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || prEXMEM_in.flush = 1) 
+  	if (nRST == 0 || flush = 1) 
       begin	  
         prEXMEM_out.regDst = 0;
         prEXMEM_out.branch = 0;
@@ -52,7 +53,7 @@ module pipeRegEXMEM(
 
 always_ff @(negedge CLK) 
   begin
-    if(prEXMEM_in.enable) 
+    if(enable) 
       begin
         prEXMEM_out.regDst = prEXMEM_in.regDst;
         prEXMEM_out.branch = prEXMEM_in.branch;
