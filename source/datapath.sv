@@ -36,12 +36,12 @@ module datapath (
 
   //output signal interfaces from pipeline registers
   pipe_reg_if ifidValue(), idexValue(), exmemValue(), memwbValue();
-  //input signal interface from to IFID pipeline register
-  pipe_reg_if ifid_input();
+  //input signal interfaces to pipeline registers
+  pipe_reg_if ifid_input(), idex_input(), exmem_input(), memwb_input();
 
   //IFID pipeline register input
   ifid_input.regDst = 0;
-  ifid_input.branch = 0;
+  ifid_input.branch = 0;.
   ifid_input.WEN = 0;
   ifid_input.aluSrc = 0;
   ifid_input.jmp = 0;
@@ -64,11 +64,86 @@ module datapath (
   ifid_input.outputPort = 32'h0;
 
 
+  //IDEX pipeline register input
+  idex_input.regDst = countif.regDst;
+  idex_input.branch = countif.branch;
+  idex_input.WEN = countif.WEN;
+  idex_input.aluSrc = countif.aluSrc;
+  idex_input.jmp = countif.jmp;
+  idex_input.jl = countif.jl;
+  idex_input.jmpReg = countif.jmpReg;
+  idex_input.memToReg = countif.memToReg;
+  idex_input.dREN = countif.dREN;
+  idex_input.dWEN = countif.dWEN;
+  idex_input.lui = countif.lui;
+  idex_input.bne = countif.bne;
+  idex_input.zeroExt = countif.zeroExt;
+  idex_input.shiftSel = countif.shiftSel;
+  idex_input.aluCont = countif.aluCont;
+  idex_input.aluOp = countif.aluOp;
+  idex_input.instr = ifidValue.instr;
+  idex_input.incPC = ifidValue.incPC;
+  idex_input.pc = ifidValue.pc;
+  idex_input.rdat1 = rfif.rdat1;
+  idex_input.rdat2 = rfif.rdat2;
+  idex_input.outputPort = 32'b0;
+
+
+  //EXMEM pipeline register input
+  exmem_input.regDst = idexValue.regDst;
+  exmem_input.branch = idexValue.branch;
+  exmem_input.WEN = idexValue.WEN;
+  exmem_input.aluSrc = idexValue.aluSrc;
+  exmem_input.jmp = idexValue.jmp;
+  exmem_input.jl = idexValue.jl;
+  exmem_input.jmpReg = idexValue.jmpReg;
+  exmem_input.memToReg = idexValue.memToReg;
+  exmem_input.dREN = idexValue.dREN;
+  exmem_input.dWEN = idexValue.dWEN;
+  exmem_input.lui = idexValue.lui;
+  exmem_input.bne = idexValue.bne;
+  exmem_input.zeroExt = idexValue.zeroExt;
+  exmem_input.shiftSel = idexValue.shiftSel;
+  exmem_input.aluCont = idexValue.aluCont;
+  exmem_input.aluOp = idexValue.aluOp;
+  exmem_input.instr = idexValue.instr;
+  exmem_input.incPC = idexValue.incPC;
+  exmem_input.pc = idexValue.pc;
+  exmem_input.rdat1 = idexValue.rdat1;
+  exmem_input.rdat2 = idexValue.rdat2;
+  exmem_input.outputPort = aluf.outputPort;
+
+
+  //MEMWB pipeline register input
+  memwb_input.regDst = exmemValue.regDst;
+  memwb_input.branch = exmemValue.branch;
+  memwb_input.WEN = exmemValue.WEN;
+  memwb_input.aluSrc = exmemValue.aluSrc;
+  memwb_input.jmp = exmemValue.jmp;
+  memwb_input.jl = exmemValue.jl;
+  memwb_input.jmpReg = exmemValue.jmpReg;
+  memwb_input.memToReg = exmemValue.memToReg;
+  memwb_input.dREN = exmemValue.dREN;
+  memwb_input.dWEN = exmemValue.dWEN;
+  memwb_input.lui = exmemValue.lui;
+  memwb_input.bne = exmemValue.bne;
+  memwb_input.zeroExt = exmemValue.zeroExt;
+  memwb_input.shiftSel = exmemValue.shiftSel;
+  memwb_input.aluCont = exmemValue.aluCont;
+  memwb_input.aluOp = exmemValue.aluOp;
+  memwb_input.instr = exmemValue.instr;
+  memwb_input.incPC = exmemValue.incPC;
+  memwb_input.pc = exmemValue.pc;
+  memwb_input.rdat1 = exmemValue.rdat1;
+  memwb_input.rdat2 = exmemValue.rdat2;
+  memwb_input.outputPort = exmemValue.outputPort;
+
+
   // Pipelines
   pipeRegIFID ifid(CLK, nRST, ifid_input, ifidValue, dpif.ihit, 0);
-  pipeRegIDEX idex(CLK, nRST, ifidValue.branch, ifidValue.WEN, ifidValue.aluSrc, ifidValue.jmp, ifidValue.jl, ifidValue.jmpReg, ifidValue.memToReg, ifidValue.dREN, ifidValue.dWEN, ifidValue.lui, ifidValue.bne, ifidValue.zeroExt, ifidValue.shiftSel, ifidValue.aluCont, ifidValue.aluOp, ifidValue.instr, ifidValue.incPC, ifidValue.pc, rfif.rdat1, rfif.rdat2, 0, idexValue, dpif.ihit, 0);
-  pipeRegEXMEM exmem(CLK, nRST, idexValue.branch, idexValue.WEN, idexValue.aluSrc, idexValue.jmp, idexValue.jl, idexValue.jmpReg, idexValue.memToReg, idexValue.dREN, idexValue.dWEN, idexValue.lui, idexValue.bne, idexValue.zeroExt, idexValue.shiftSel, idexValue.aluCont, idexValue.aluOp, idexValue.instr,  idexValue.incPC, idexValue.pc, idexValue.rdat1, idexValue.rdat2, aluf.outputPort, exmemValue, dpif.ihit, 0);
-  pipeRegMEMWB memwb(CLK, nRST, exmemValue.branch, exmemValue.WEN, exmemValue.aluSrc, exmemValue.jmp, exmemValue.jl, exmemValue.jmpReg, exmemValue.memToReg, exmemValue.dREN, exmemValue.dWEN, exmemValue.lui, exmemValue.bne, exmemValue.zeroExt, exmemValue.shiftSel, exmemValue.aluCont, exmemValue.aluOp, exmemValue.instr, exmemValue.incPC, exmemValue.pc, exmemValue.rdat1, exmemValue.rdat2, exmemValue.outputPort, memwbValue, memwbEnable, 0);
+  pipeRegIDEX idex(CLK, nRST, idex_input, idexValue, dpif.ihit, 0);
+  pipeRegEXMEM exmem(CLK, nRST, exmem_input, exmemValue, dpif.ihit, 0);
+  pipeRegMEMWB memwb(CLK, nRST, memwb_input, memwbValue, memwbEnable, 0);
 
   // Datapath blocks
   register_file rf (CLK, nRST, rfif);
