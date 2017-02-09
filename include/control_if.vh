@@ -14,7 +14,7 @@
 `include "cpu_types_pkg.vh"
 `include "caches_if.vh"
 
-interface control_if( );
+interface control_if;
   // import types
   import cpu_types_pkg::*;
 

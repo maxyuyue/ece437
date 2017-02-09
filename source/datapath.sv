@@ -11,7 +11,7 @@
 `include "control_if.vh"
 `include "register_file_if.vh"
 `include "alu_file_if.vh"
-`include "pipe_reg_if"
+`include "pipe_reg_if.vh"
 
 module datapath (
   input logic CLK, nRST,
@@ -34,7 +34,7 @@ module datapath (
   r_t rType;
   logic memwbEnable;
 
-  pipe_reg_if ifidValue, idexValue, exmemValue, memwbValue;
+  pipe_reg_if ifidValue(), idexValue(), exmemValue(), memwbValue();
 
 /*
 prIFID.regDst = 0;

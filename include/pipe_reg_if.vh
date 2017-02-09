@@ -14,7 +14,7 @@
 `include "cpu_types_pkg.vh"
 `include "caches_if.vh"
 
-interface pipe_reg_if( );
+interface pipe_reg_if;
   // import types
   import cpu_types_pkg::*;
 
@@ -26,7 +26,7 @@ interface pipe_reg_if( );
 
   logic   dhit, ihit, halt;
 
-  word_t instr, incPC, pc, rdat1, rdat2, jmpAddr, outputPort;
+  word_t instr, incPC, pc, rdat1, rdat2, outputPort;
 
 endinterface
 
