@@ -41,12 +41,10 @@ module pipeRegMEMWB(
         prMEMWB_out.aluCont = 0;
         prMEMWB_out.aluOp = 0;
         prMEMWB_out.instr = 32'h0;
-        prMEMWB_out.extendOut = 32'h0;
         prMEMWB_out.incPC = 32'h0;
         prMEMWB_out.pc = 32'h0;
         prMEMWB_out.rdat1 = 32'h0;
         prMEMWB_out.rdat2 = 32'h0;
-        prMEMWB_out.jmpAddr = 32'h0;
         prMEMWB_out.outputPort = 32'h0;
     	end
   end
@@ -73,12 +71,10 @@ always_ff @(negedge CLK)
         prMEMWB_out.aluCont = prMEMWB_in.aluCont;
         prMEMWB_out.aluOp = prMEMWB_in.aluOp;
         prMEMWB_out.instr = prMEMWB_in.instr;
-        prMEMWB_out.extendOut = prMEMWB_in.extendOut;
         prMEMWB_out.incPC = prMEMWB_in.incPC;
         prMEMWB_out.pc = prMEMWB_in.pc;
         prMEMWB_out.rdat1 = prMEMWB_in.rdat1;
         prMEMWB_out.rdat2 = prMEMWB_in.rdat2;
-        prMEMWB_out.jmpAddr = prMEMWB_in.jmpAddr;
         prMEMWB_out.outputPort = prMEMWB_in.outputPort;      
       end
   end

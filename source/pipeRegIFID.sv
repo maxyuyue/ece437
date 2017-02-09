@@ -34,12 +34,10 @@ module pipeREGIFID(
         prIFID_out.aluCont = 0;
         prIFID_out.aluOp = 0;
         prIFID_out.instr = 32'h0;
-        prIFID_out.extendOut = 32'h0;
         prIFID_out.incPC = 32'h0;
         prIFID_out.pc = 32'h0;
         prIFID_out.rdat1 = 32'h0;
         prIFID_out.rdat2 = 32'h0;
-        prIFID_out.jmpAddr = 32'h0;
         prIFID_out.outputPort = 32'h0;
     	end
   end
@@ -66,12 +64,10 @@ always_ff @(negedge CLK)
          prIFID_out.aluCont = prIFID_in.aluCont;
          prIFID_out.aluOp = prIFID_in.aluOp;
          prIFID_out.instr = prIFID_in.instr;
-         prIFID_out.extendOut = prIFID_in.extendOut;
          prIFID_out.incPC = prIFID_in.incPC;
          prIFID_out.pc = prIFID_in.pc;
          prIFID_out.rdat1 = prIFID_in.rdat1;
          prIFID_out.rdat2 = prIFID_in.rdat2;
-         prIFID_out.jmpAddr = prIFID_in.jmpAddr;
          prIFID_out.outputPort = prIFID_in.outputPort;    
       end
   end
