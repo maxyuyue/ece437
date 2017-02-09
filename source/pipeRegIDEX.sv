@@ -41,12 +41,10 @@ module pipeRegIDEX (
         prIDEX_out.aluCont = 0;
         prIDEX_out.aluOp = 0;
         prIDEX_out.instr = 32'h0;
-        prIDEX_out.extendOut = 32'h0;
         prIDEX_out.incPC = 32'h0;
         prIDEX_out.pc = 32'h0;
         prIDEX_out.rdat1 = 32'h0;
         prIDEX_out.rdat2 = 32'h0;
-        prIDEX_out.jmpAddr = 32'h0;
         prIDEX_out.outputPort = 32'h0;
     	end
   end
@@ -73,12 +71,10 @@ always_ff @(negedge CLK)
         prIDEX_out.aluCont = prIDEX_in.aluCont;
         prIDEX_out.aluOp = prIDEX_in.aluOp;
         prIDEX_out.instr = prIDEX_in.instr;
-        prIDEX_out.extendOut = prIDEX_in.extendOut;
         prIDEX_out.incPC = prIDEX_in.incPC;
         prIDEX_out.pc = prIDEX_in.pc;
         prIDEX_out.rdat1 = prIDEX_in.rdat1;
         prIDEX_out.rdat2 = prIDEX_in.rdat2;
-        prIDEX_out.jmpAddr = prIDEX_in.jmpAddr;
         prIDEX_out.outputPort = prIDEX_in.outputPort;      
       end
   end

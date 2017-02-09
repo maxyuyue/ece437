@@ -41,12 +41,10 @@ module pipeRegEXMEM(
         prEXMEM_out.aluCont = 0;
         prEXMEM_out.aluOp = 0;
         prEXMEM_out.instr = 32'h0;
-        prEXMEM_out.extendOut = 32'h0;
         prEXMEM_out.incPC = 32'h0;
         prEXMEM_out.pc = 32'h0;
         prEXMEM_out.rdat1 = 32'h0;
         prEXMEM_out.rdat2 = 32'h0;
-        prEXMEM_out.jmpAddr = 32'h0;
         prEXMEM_out.outputPort = 32'h0;
     	end
   end
@@ -73,12 +71,10 @@ always_ff @(negedge CLK)
         prEXMEM_out.aluCont = prEXMEM_in.aluCont;
         prEXMEM_out.aluOp = prEXMEM_in.aluOp;
         prEXMEM_out.instr = prEXMEM_in.instr;
-        prEXMEM_out.extendOut = prEXMEM_in.extendOut;
         prEXMEM_out.incPC = prEXMEM_in.incPC;
         prEXMEM_out.pc = prEXMEM_in.pc;
         prEXMEM_out.rdat1 = prEXMEM_in.rdat1;
         prEXMEM_out.rdat2 = prEXMEM_in.rdat2;
-        prEXMEM_out.jmpAddr = prEXMEM_in.jmpAddr;
         prEXMEM_out.outputPort = prEXMEM_in.outputPort;      
       end
   end
