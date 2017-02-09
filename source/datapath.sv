@@ -35,6 +35,7 @@ module datapath (
   funct_t func, funcif, funcid, funcex, funcmem, funcwb;
 
   logic memwbEnable;
+  logic exmemFlush;
 
   //output signal interfaces from pipeline registers
   pipe_reg_if ifidValue(), idexValue(), exmemValue(), memwbValue();
@@ -202,8 +203,8 @@ module datapath (
   // Pipelines
   pipeRegIFID ifid(CLK, nRST, ifid_input, ifidValue, dpif.ihit, 1'b0);
   pipeRegIDEX idex(CLK, nRST, idex_input, idexValue, dpif.ihit, 1'b0);
-  pipeRegEXMEM exmem(CLK, nRST, exmem_input, exmemValue, dpif.ihit, 1'b0);
-  pipeRegMEMWB memwb(CLK, nRST, memwb_input, memwbValue, memwbEnable, 1'b0);
+  pipeRegEXMEM exmem(CLK, nRST, exmem_input, exmemValue, memwbEnable, exmemFlush);
+  pipeRegMEMWB memwb(CLK, nRST, memwb_input, memwbValue, dpif.ihit, 1'b0);
 
   // Datapath blocks
   register_file rf (CLK, nRST, rfif);
@@ -216,6 +217,7 @@ module datapath (
   assign dpif.dmemstore = exmemValue.rdat2;
   assign dpif.dmemaddr = exmemValue.outputPort;
   assign memwbEnable = dpif.ihit | dpif.dhit;
+  assign exmemFlush = ~dpif.ihit & dpif.dhit;
   assign dpif.dmemREN = exmemValue.dREN; // instead of request unit
   assign dpif.dmemWEN = exmemValue.dWEN; // instead of request unit
 
