@@ -1,26 +1,75 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate /system_tb/CLK
-add wave -noupdate /system_tb/nRST
-add wave -noupdate /system_tb/PROG/cycles
-add wave -noupdate /system_tb/syif/halt
-add wave -noupdate /system_tb/syif/load
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/halt
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/ihit
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemREN
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemload
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/imemaddr
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dhit
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemREN
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemWEN
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemload
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemstore
-add wave -noupdate /system_tb/DUT/CPU/DP/dpif/dmemaddr
-add wave -noupdate -radix hexadecimal -childformat {{{/system_tb/DUT/CPU/DP/rf/regs[31]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[30]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[29]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[28]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[27]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[26]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[25]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[24]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[23]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[22]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[21]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[20]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[19]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[18]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[17]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[16]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[15]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[14]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[13]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[12]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[11]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[10]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[9]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[8]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[7]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[6]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[5]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[4]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[3]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[2]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[1]} -radix hexadecimal} {{/system_tb/DUT/CPU/DP/rf/regs[0]} -radix hexadecimal}} -subitemconfig {{/system_tb/DUT/CPU/DP/rf/regs[31]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[30]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[29]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[28]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[27]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[26]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[25]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[24]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[23]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[22]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[21]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[20]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[19]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[18]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[17]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[16]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[15]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[14]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[13]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[12]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[11]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[10]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[9]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[8]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[7]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[6]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[5]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[4]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[3]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[2]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[1]} {-height 17 -radix hexadecimal} {/system_tb/DUT/CPU/DP/rf/regs[0]} {-height 17 -radix hexadecimal}} /system_tb/DUT/CPU/DP/rf/regs
-add wave -noupdate /system_tb/DUT/CPU/DP/controler/rType
-add wave -noupdate /system_tb/DUT/CPU/DP/controler/iType
+add wave -noupdate -divider dp
+add wave -noupdate /system_tb/DUT/CPU/DP/CLK
+add wave -noupdate /system_tb/DUT/CPU/dcif/halt
+add wave -noupdate /system_tb/DUT/CPU/dcif/ihit
+add wave -noupdate /system_tb/DUT/CPU/dcif/imemREN
+add wave -noupdate /system_tb/DUT/CPU/DP/opCif
+add wave -noupdate /system_tb/DUT/CPU/dcif/imemload
+add wave -noupdate /system_tb/DUT/CPU/dcif/imemaddr
+add wave -noupdate /system_tb/DUT/CPU/dcif/dhit
+add wave -noupdate /system_tb/DUT/CPU/dcif/dmemREN
+add wave -noupdate /system_tb/DUT/CPU/dcif/dmemWEN
+add wave -noupdate /system_tb/DUT/CPU/dcif/dmemload
+add wave -noupdate /system_tb/DUT/CPU/dcif/dmemstore
+add wave -noupdate /system_tb/DUT/CPU/dcif/dmemaddr
+add wave -noupdate -divider ifidValue
+add wave -noupdate /system_tb/DUT/CPU/DP/opCid
+add wave -noupdate /system_tb/DUT/CPU/DP/ifidValue/instr
+add wave -noupdate /system_tb/DUT/CPU/DP/ifidValue/pc
+add wave -noupdate -divider idexValue
+add wave -noupdate /system_tb/DUT/CPU/DP/opCex
+add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/instr
+add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/regDst
+add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/WEN
+add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/aluSrc
+add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/zeroExt
+add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/shiftSel
+add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/aluOp
+add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/pc
+add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/rdat1
+add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/rdat2
+add wave -noupdate -divider controller
+add wave -noupdate /system_tb/DUT/CPU/DP/controler/instr
+add wave -noupdate /system_tb/DUT/CPU/DP/controler/contIf/shiftSel
+add wave -noupdate -divider exmemValue
+add wave -noupdate /system_tb/DUT/CPU/DP/opCmem
+add wave -noupdate /system_tb/DUT/CPU/DP/exmem/enable
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/instr
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/regDst
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/branch
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/WEN
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/aluSrc
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/zeroExt
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/shiftSel
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/aluOp
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/pc
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/rdat1
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/rdat2
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/outputPort
+add wave -noupdate -divider memwbValue
+add wave -noupdate /system_tb/DUT/CPU/DP/opCwb
+add wave -noupdate /system_tb/DUT/CPU/DP/memwb/enable
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/instr
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/regDst
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/WEN
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/aluSrc
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/jmpReg
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/memToReg
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/dREN
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/dWEN
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/zeroExt
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/shiftSel
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/aluOp
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/pc
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/rdat1
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/rdat2
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/outputPort
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/dmemload
+add wave -noupdate /system_tb/DUT/CPU/DP/rf/regs
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {1543421 ps} 0}
+WaveRestoreCursors {{Cursor 1} {308882 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 132
@@ -36,4 +85,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {1465840 ps} {1832308 ps}
+WaveRestoreZoom {29411 ps} {513494 ps}

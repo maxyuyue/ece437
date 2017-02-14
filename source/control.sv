@@ -155,7 +155,7 @@
         else if (instr[31:26] == LW) begin // I-type instruction
           contIf.memToReg = 1;
           contIf.dREN = 1;
-          contIf.WEN = dHit;
+          contIf.WEN = 1; // preiously dhit
         end
         else if (instr[31:26] == ORI) begin // I-type instruction
             contIf.aluOp = ALU_OR;

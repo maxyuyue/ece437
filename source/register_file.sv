@@ -20,21 +20,33 @@
 
    word_t regs [31:0];
    
-   always_ff @(posedge CLK or negedge nRST) begin
-    if (nRST == 0) begin
-      regs <= '{default:'0};
+   always_ff @(posedge CLK or negedge nRST)
+    begin
+      if (nRST == 0)
+        begin
+          regs <= '{default:'0};
+        end
+      else if (rfif.WEN) 
+        begin
+          if (rfif.wsel != 0)
+            begin
+              regs[rfif.wsel] <= rfif.wdat;
+            end	      
+        end	   
     end
-    else if (rfif.WEN) begin
-      if (rfif.wsel != 0) begin
-        regs[rfif.wsel] <= rfif.wdat;
-      end	      
-    end	   
-  end
 
-  always_comb begin
-    rfif.rdat1 = regs[rfif.rsel1];
-    rfif.rdat2 = regs[rfif.rsel2];
-
-  end
-  
+  always_ff @(negedge CLK or negedge nRST) 
+    begin
+      if(nRST == 0)
+        begin
+          rfif.rdat1 <= 32'b0;
+          rfif.rdat2 <= 32'b0;
+        end
+      else
+        begin
+          rfif.rdat1 <= regs[rfif.rsel1];
+          rfif.rdat2 <= regs[rfif.rsel2];
+        end 
+    end
+ 
 endmodule
