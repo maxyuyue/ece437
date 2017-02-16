@@ -213,9 +213,9 @@ module datapath (
   assign countIfPC.aluCont = idexValue.aluCont;
   assign countIfPC.aluOp = idexValue.aluOp;
 
-  logic stallPC, jumpBranch, ifidFlush, idexFlush;
+  logic stallPC, jumpBranch, ifidFlush, idexFlush, ifidFreze, ifidEnable;
   // Pipelines
-  pipeRegIFID ifid(CLK, nRST, dpif.ihit, ifid_input, ifidValue, dpif.ihit, ifidFlush);
+  pipeRegIFID ifid(CLK, nRST, dpif.ihit, ifid_input, ifidValue, ifidEnable, ifidFlush);
   pipeRegIDEX idex(CLK, nRST, dpif.ihit, idex_input, idexValue, dpif.ihit, idexFlush);
   pipeRegEXMEM exmem(CLK, nRST, dpif.ihit, exmem_input, exmemValue, dpif.ihit, exmemFlush);
   pipeRegMEMWB memwb(CLK, nRST, dpif.ihit, memwb_input, memwbValue, memwbEnable, 1'b0);
@@ -227,7 +227,7 @@ module datapath (
   control controler (ifidValue.instr, countIf, dpif.dhit, dpif.ihit);
   
 
-  hazard_unit hazard(countIf.WEN,jumpBranch, ifidValue.instr[25:21], ifidValue.instr[20:16], idexValue.dest, exmemValue.dest, stallPC, ifidFlush, idexFlush);
+  hazard_unit hazard(countIf.WEN,jumpBranch, ifidValue.instr[25:21], ifidValue.instr[20:16], idexValue.dest, exmemValue.dest, stallPC, ifidFlush, idexFlush, ifidFreze);
 
   assign dpif.imemREN = 1; // TODO: Pass halt signal through registers ~memwbValue.halt;
   assign dpif.dmemstore = exmemValue.rdat2;
@@ -236,7 +236,7 @@ module datapath (
   assign exmemFlush = ~dpif.ihit & dpif.dhit;
   assign dpif.dmemREN = exmemValue.dREN; // instead of request unit
   assign dpif.dmemWEN = exmemValue.dWEN; // instead of request unit
- 
+  assign ifidEnable = dpif.ihit & ~ifidFreze;
   
 
 

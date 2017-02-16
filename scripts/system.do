@@ -36,8 +36,26 @@ add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/instr
 add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/WEN
 add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/pc
 add wave -noupdate /system_tb/DUT/CPU/DP/rf/regs
+add wave -noupdate -divider Hazard
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/WEN
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/jumpBranch
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/rsel1
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/rsel2
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/idexWsel
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/exmemWsel
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/stallPC
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/ifidFlush
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/idexFlush
+add wave -noupdate -divider RFIF
+add wave -noupdate /system_tb/DUT/CPU/DP/rfif/WEN
+add wave -noupdate /system_tb/DUT/CPU/DP/rfif/wsel
+add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rsel1
+add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rsel2
+add wave -noupdate /system_tb/DUT/CPU/DP/rfif/wdat
+add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rdat1
+add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rdat2
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {308882 ps} 0}
+WaveRestoreCursors {{Cursor 1} {169180 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 132
