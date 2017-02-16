@@ -7,6 +7,7 @@
   ori   $15, $zero, jmpR
   beq   $zero, $zero, braZ
   sw    $1, 0($2)
+  ori   $21, $zero, 0x1111
 braZ:
   jal   braR
   sw    $1, 4($2)

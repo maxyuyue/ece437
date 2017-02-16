@@ -18,6 +18,8 @@ add wave -noupdate /system_tb/DUT/CPU/dcif/dmemaddr
 add wave -noupdate -divider ifidValue
 add wave -noupdate /system_tb/DUT/CPU/DP/opCid
 add wave -noupdate /system_tb/DUT/CPU/DP/funcid
+add wave -noupdate /system_tb/DUT/CPU/DP/ifid/enable
+add wave -noupdate /system_tb/DUT/CPU/DP/ifid/flush
 add wave -noupdate /system_tb/DUT/CPU/DP/ifidValue/instr
 add wave -noupdate /system_tb/DUT/CPU/DP/ifidValue/pc
 add wave -noupdate -divider idexValue
@@ -89,7 +91,7 @@ add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/bne
 add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/zeroExt
 add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/shiftSel
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {350836 ps} 0}
+WaveRestoreCursors {{Cursor 1} {441264 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 139
@@ -105,4 +107,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {480590 ps}
+WaveRestoreZoom {192236 ps} {672826 ps}

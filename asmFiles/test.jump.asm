@@ -11,7 +11,7 @@
   ori   $7, $zero, 0xDCDC
   ori   $8, $zero, 0xDCDC
 
-  j loc
+  jal loc
   or $9, $1, $2
   or $10, $3, $4
   or $13, $1, $2
