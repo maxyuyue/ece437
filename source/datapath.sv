@@ -261,17 +261,6 @@ module datapath (
   assign rfif.rsel2 = ifidValue.instr[20:16];
   assign rfif.WEN = memwbValue.WEN;
   assign rfif.wsel = memwbValue.dest;
-  /*always_comb begin //wsel iputs
-    if (memwbValue.jl == 1) begin
-      rfif.wsel = 31;
-    end
-    else begin
-      if (memwbValue.regDst == 1)
-        rfif.wsel = memwbValue.instr[15:11];
-      else
-        rfif.wsel = memwbValue.instr[20:16];
-    end
-  end*/
 
   always_comb begin // wdat inputs
     if (memwbValue.lui == 1) 
