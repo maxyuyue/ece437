@@ -23,7 +23,7 @@ module pipeRegEXMEM(
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || (flush == 1 && ihit == 1)) 
+  	if (nRST == 0 || (flush == 1 )) // flush not on ihit 
     begin	  
       prEXMEM_out.regDst = 0;
       prEXMEM_out.branch = 0;
