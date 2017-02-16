@@ -15,7 +15,7 @@
 import cpu_types_pkg::*;
 
 module programCounter (
-  input word_t pc, imemload, extendOut, rdat1,
+  input word_t pc, idexPC, imemload, extendOut, rdat1,
   input logic zero,
   control_if countIf,
   output word_t newPC, incPC, 
@@ -26,7 +26,7 @@ module programCounter (
   import cpu_types_pkg::*;
 
 
-	word_t	branchPC, mux1Out, mux2Out;
+	word_t	branchPC, mux1Out, mux2Out, idexIncPC;
 	logic branch, jump, jump2;
 
   // Mux 1
@@ -69,7 +69,7 @@ module programCounter (
 	// Mux 3
 	always_comb begin
 		if (countIf.jmp == 1) begin// jump address
-			newPC = {pc[31:26],(imemload[25:0] << 2)};
+			newPC = {idexPC[31:26],(imemload[25:0] << 2)};
 			jump2 = 1;
 		end
 		else begin // select mux2Out
@@ -80,7 +80,8 @@ module programCounter (
 
   // Program counter connections
 	assign incPC = pc + 4;
-	assign branchPC = incPC + (extendOut << 2); 
+	assign idexIncPC = idexPC + 4;
+	assign branchPC = idexIncPC + (extendOut << 2); 
 	assign jumpBranch = jump | jump2 | branch;
 
 endmodule
