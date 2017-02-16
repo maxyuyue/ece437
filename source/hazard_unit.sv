@@ -15,8 +15,7 @@
 module hazard_unit (
   input logic WEN, jumpBranch,
   input [4:0] rsel1, rsel2, idexWsel, exmemWsel,
-  output logic stallPC, ifidFlush, idexFlush, exmemFlush,
-  output logic idexFreeze
+  output logic stallPC, ifidFlush, idexFlush
 );
   // import types
   import cpu_types_pkg::*;
@@ -26,29 +25,21 @@ module hazard_unit (
       stallPC = 1;
       ifidFlush = 0;
       idexFlush = 1;
-      exmemFlush = 0;
-      idexFreeze = 0;
     end
     else if (((rsel1 == idexWsel) || (rsel2 == idexWsel)) && (idexWsel != 0) && (WEN == 1)) begin
       stallPC = 1;
       ifidFlush = 0;
       idexFlush = 1;
-      exmemFlush = 0;
-      idexFreeze = 0;
     end
     else if (jumpBranch == 1) begin
       stallPC = 0;
       ifidFlush = 1;
       idexFlush = 1;
-      exmemFlush = 0;
-      idexFreeze = 0;
     end
     else begin
       stallPC = 0;
       ifidFlush = 0;
       idexFlush = 0;
-      exmemFlush = 0;
-      idexFreeze = 0;
     end
 
 

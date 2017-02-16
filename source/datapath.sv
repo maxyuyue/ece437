@@ -213,7 +213,7 @@ module datapath (
   assign countIfPC.aluCont = idexValue.aluCont;
   assign countIfPC.aluOp = idexValue.aluOp;
 
-  logic stallPC, jumpBranch, ifidFlush, idexFlush, exmemPipeFlush;
+  logic stallPC, jumpBranch, ifidFlush, idexFlush;
   // Pipelines
   pipeRegIFID ifid(CLK, nRST, dpif.ihit, ifid_input, ifidValue, dpif.ihit, ifidFlush);
   pipeRegIDEX idex(CLK, nRST, dpif.ihit, idex_input, idexValue, dpif.ihit, idexFlush);
@@ -227,7 +227,7 @@ module datapath (
   control controler (ifidValue.instr, countIf, dpif.dhit, dpif.ihit);
   
 
-  hazard_unit hazard(countIf.WEN,jumpBranch, ifidValue.instr[25:21], ifidValue.instr[20:16], idexValue.dest, exmemValue.dest, stallPC, ifidFlush, idexFlush, exmemPipeFlush, idexFreeze);
+  hazard_unit hazard(countIf.WEN,jumpBranch, ifidValue.instr[25:21], ifidValue.instr[20:16], idexValue.dest, exmemValue.dest, stallPC, ifidFlush, idexFlush);
 
   assign dpif.imemREN = 1; // TODO: Pass halt signal through registers ~memwbValue.halt;
   assign dpif.dmemstore = exmemValue.rdat2;
