@@ -18,7 +18,8 @@ module programCounter (
   input word_t pc, imemload, extendOut, rdat1,
   input logic zero,
   control_if countIf,
-  output word_t newPC, incPC
+  output word_t newPC, incPC, 
+  output logic jumpBranch
 
 );
   // import types
@@ -26,47 +27,60 @@ module programCounter (
 
 
 	word_t	branchPC, mux1Out, mux2Out;
-
+	logic branch, jump, jump2;
 
   // Mux 1
 	always_comb begin
 	  	if (countIf.bne == 1) begin // if a bne instruction
 	  		if ((!zero && countIf.branch) == 1) begin // branch
 	  			mux1Out = branchPC;
+	  			branch = 1;
 	  		end
 	  		else begin // no branch
 	  			mux1Out = incPC;
+	  			branch = 0;
 	  		end
 	  	end
 	  	else begin // Not a bne instruction
 	  		if ((zero && countIf.branch) == 1) begin // branch
 	  			mux1Out = branchPC;
+	  			branch = 1;
 	  		end
 	  		else begin // no branch
 	  			mux1Out = incPC;
+	  			branch = 0;
 	  		end
 	  	end
 	end
 
 	// Mux 2
 	always_comb begin
-		if (countIf.jmpReg == 1) // select register 1 to jump to
+		if (countIf.jmpReg == 1) begin// select register 1 to jump to
 			mux2Out = rdat1;
-		else // select mux1Out
+			jump = 1;
+		end
+		else begin // select mux1Out
 			mux2Out = mux1Out;
+			jump = 0;
+		end
 	end
 
 
 	// Mux 3
 	always_comb begin
-		if (countIf.jmp == 1) // jump address
+		if (countIf.jmp == 1) begin// jump address
 			newPC = {pc[31:26],(imemload[25:0] << 2)};
-		else // select mux2Out
+			jump2 = 1;
+		end
+		else begin // select mux2Out
 			newPC = mux2Out;
+			jump2 = 0;
+		end
 	end
 
   // Program counter connections
 	assign incPC = pc + 4;
 	assign branchPC = incPC + (extendOut << 2); 
+	assign jumpBranch = jump | jump2 | branch;
 
 endmodule

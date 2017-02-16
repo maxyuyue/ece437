@@ -213,19 +213,21 @@ module datapath (
   assign countIfPC.aluCont = idexValue.aluCont;
   assign countIfPC.aluOp = idexValue.aluOp;
 
-
+  logic stallPC, jumpBranch, ifidFlush, idexFlush, exmemPipeFlush;
   // Pipelines
-  pipeRegIFID ifid(CLK, nRST, ifid_input, ifidValue, dpif.ihit, 1'b0);
-  pipeRegIDEX idex(CLK, nRST, idex_input, idexValue, dpif.ihit, 1'b0);
-  pipeRegEXMEM exmem(CLK, nRST, exmem_input, exmemValue, dpif.ihit, exmemFlush);
-  pipeRegMEMWB memwb(CLK, nRST, memwb_input, memwbValue, memwbEnable, 1'b0);
+  pipeRegIFID ifid(CLK, nRST, dpif.ihit, ifid_input, ifidValue, dpif.ihit, ifidFlush);
+  pipeRegIDEX idex(CLK, nRST, dpif.ihit, idex_input, idexValue, dpif.ihit, idexFlush);
+  pipeRegEXMEM exmem(CLK, nRST, dpif.ihit, exmem_input, exmemValue, dpif.ihit, exmemFlush);
+  pipeRegMEMWB memwb(CLK, nRST, dpif.ihit, memwb_input, memwbValue, memwbEnable, 1'b0);
 
   // Datapath blocks
   register_file rf (CLK, nRST, rfif);
-  programCounter progCount (pc, idexValue.instr, extendOut, idexValue.rdat1, aluf.zero, countIfPC, newPC, incPC);
+  programCounter progCount (pc, idexValue.instr, extendOut, idexValue.rdat1, aluf.zero, countIfPC, newPC, incPC, jumpBranch);
   alu_file alu(aluf);
   control controler (ifidValue.instr, countIf, dpif.dhit, dpif.ihit);
+  
 
+  hazard_unit hazard(countIf.WEN,jumpBranch, ifidValue.instr[25:21], ifidValue.instr[20:16], idexValue.dest, exmemValue.dest, stallPC, ifidFlush, idexFlush, exmemPipeFlush, idexFreeze);
 
   assign dpif.imemREN = 1; // TODO: Pass halt signal through registers ~memwbValue.halt;
   assign dpif.dmemstore = exmemValue.rdat2;
@@ -234,8 +236,8 @@ module datapath (
   assign exmemFlush = ~dpif.ihit & dpif.dhit;
   assign dpif.dmemREN = exmemValue.dREN; // instead of request unit
   assign dpif.dmemWEN = exmemValue.dWEN; // instead of request unit
-
-
+ 
+  
 
 
   /********** Program Counter Update **********/
@@ -245,7 +247,7 @@ module datapath (
         pc <= PC_INIT;
       end
       else begin  
-        if (dpif.ihit == 1) begin
+        if ((dpif.ihit == 1) && (stallPC == 0)) begin
           pc <= newPC;        
         end
         else begin

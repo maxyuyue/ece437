@@ -11,7 +11,7 @@
 
 
 module pipeRegIDEX (
-  input logic CLK, nRST,
+  input logic CLK, nRST, ihit,
   //two instances of the pipe_reg_if --> one as input and other as output
   pipe_reg_if prIDEX_in,
   pipe_reg_if prIDEX_out,
@@ -23,7 +23,7 @@ module pipeRegIDEX (
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || flush == 1) 
+  	if (nRST == 0 || (flush == 1 && ihit == 1)) 
     begin	  
       prIDEX_out.regDst = 0;
       prIDEX_out.branch = 0;
