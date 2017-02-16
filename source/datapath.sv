@@ -100,6 +100,7 @@ module datapath (
   assign ifid_input.rdat2 = 32'h0;
   assign ifid_input.outputPort = 32'h0;
   assign ifid_input.dmemload = 32'h0;
+  assign ifid_input.dest = 5'h0;
 
 
 
@@ -127,6 +128,17 @@ module datapath (
   assign idex_input.rdat2 = rfif.rdat2;
   assign idex_input.outputPort = 32'h0;
   assign idex_input.dmemload = 32'h0;
+  always_comb begin //wsel iputs
+    if (countIf.jl == 1) begin
+      idex_input.dest = 5'd31;
+    end
+    else begin
+      if (countIf.regDst == 1)
+        idex_input.dest = ifidValue.instr[15:11];
+      else
+        idex_input.dest = ifidValue.instr[20:16];
+    end
+  end
 
 
   //EXMEM pipeline register input
@@ -153,6 +165,7 @@ module datapath (
   assign exmem_input.rdat2 = idexValue.rdat2;
   assign exmem_input.outputPort = aluf.outputPort;
   assign exmem_input.dmemload = 32'h0;
+  assign exmem_input.dest = idexValue.dest;
 
 
   //MEMWB pipeline register input
@@ -179,6 +192,7 @@ module datapath (
   assign memwb_input.rdat2 = exmemValue.rdat2;
   assign memwb_input.outputPort = exmemValue.outputPort;
   assign memwb_input.dmemload = dpif.dmemload;
+  assign memwb_input.dest = exmemValue.dest;
 
 
   // Control Interface for Program Counter
@@ -246,7 +260,8 @@ module datapath (
   assign rfif.rsel1 = ifidValue.instr[25:21];
   assign rfif.rsel2 = ifidValue.instr[20:16];
   assign rfif.WEN = memwbValue.WEN;
-  always_comb begin //wsel iputs
+  assign rfif.wsel = memwbValue.dest;
+  /*always_comb begin //wsel iputs
     if (memwbValue.jl == 1) begin
       rfif.wsel = 31;
     end
@@ -256,7 +271,7 @@ module datapath (
       else
         rfif.wsel = memwbValue.instr[20:16];
     end
-  end
+  end*/
 
   always_comb begin // wdat inputs
     if (memwbValue.lui == 1) 

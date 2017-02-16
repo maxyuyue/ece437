@@ -28,6 +28,8 @@ interface pipe_reg_if;
 
   word_t instr, incPC, pc, rdat1, rdat2, outputPort, dmemload;
 
+  logic [4:0] dest; // wsel
+
 endinterface
 
 `endif //CONTROL_IF_VH
