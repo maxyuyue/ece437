@@ -4,7 +4,7 @@
 
 
 module pipeRegIFID(
-  input logic CLK, nRST,
+  input logic CLK, nRST, ihit,
   //two instances of the pipe_reg_if --> one as input and other as output
   pipe_reg_if prIFID_in,
   pipe_reg_if prIFID_out,
@@ -16,7 +16,7 @@ module pipeRegIFID(
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || flush == 1) 
+  	if (nRST == 0 || (flush == 1 && ihit == 1)) 
     begin	  
       prIFID_out.regDst = 0;
       prIFID_out.branch = 0;
@@ -41,6 +41,7 @@ module pipeRegIFID(
       prIFID_out.rdat2 = 32'h0;
       prIFID_out.outputPort = 32'h0;
       prIFID_out.dmemload = 32'h0;
+      prIFID_out.dest = 5'h0;
     end
     else if (enable == 1) begin
       prIFID_out.regDst = prIFID_in.regDst;
@@ -66,6 +67,7 @@ module pipeRegIFID(
       prIFID_out.rdat2 = prIFID_in.rdat2;
       prIFID_out.outputPort = prIFID_in.outputPort;   
       prIFID_out.dmemload = prIFID_in.dmemload; 
+      prIFID_out.dest = prIFID_in.dest;
     end
   end
 

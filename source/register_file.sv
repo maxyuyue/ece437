@@ -20,7 +20,7 @@
 
    word_t regs [31:0];
    
-   always_ff @(posedge CLK or negedge nRST)
+   always_ff @(negedge CLK or negedge nRST)
     begin
       if (nRST == 0)
         begin
@@ -35,7 +35,7 @@
         end	   
     end
 
-  always_ff @(negedge CLK or negedge nRST) 
+  always_comb
     begin
       if(nRST == 0)
         begin

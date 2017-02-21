@@ -100,6 +100,7 @@ module datapath (
   assign ifid_input.rdat2 = 32'h0;
   assign ifid_input.outputPort = 32'h0;
   assign ifid_input.dmemload = 32'h0;
+  assign ifid_input.dest = 5'h0;
 
 
 
@@ -127,6 +128,17 @@ module datapath (
   assign idex_input.rdat2 = rfif.rdat2;
   assign idex_input.outputPort = 32'h0;
   assign idex_input.dmemload = 32'h0;
+  always_comb begin //wsel iputs
+    if (countIf.jl == 1) begin
+      idex_input.dest = 5'd31;
+    end
+    else begin
+      if (countIf.regDst == 1)
+        idex_input.dest = ifidValue.instr[15:11];
+      else
+        idex_input.dest = ifidValue.instr[20:16];
+    end
+  end
 
 
   //EXMEM pipeline register input
@@ -153,6 +165,7 @@ module datapath (
   assign exmem_input.rdat2 = idexValue.rdat2;
   assign exmem_input.outputPort = aluf.outputPort;
   assign exmem_input.dmemload = 32'h0;
+  assign exmem_input.dest = idexValue.dest;
 
 
   //MEMWB pipeline register input
@@ -179,6 +192,7 @@ module datapath (
   assign memwb_input.rdat2 = exmemValue.rdat2;
   assign memwb_input.outputPort = exmemValue.outputPort;
   assign memwb_input.dmemload = dpif.dmemload;
+  assign memwb_input.dest = exmemValue.dest;
 
 
   // Control Interface for Program Counter
@@ -199,19 +213,21 @@ module datapath (
   assign countIfPC.aluCont = idexValue.aluCont;
   assign countIfPC.aluOp = idexValue.aluOp;
 
-
+  logic stallPC, jumpBranch, ifidFlush, idexFlush, ifidFreze, ifidEnable;
   // Pipelines
-  pipeRegIFID ifid(CLK, nRST, ifid_input, ifidValue, dpif.ihit, 1'b0);
-  pipeRegIDEX idex(CLK, nRST, idex_input, idexValue, dpif.ihit, 1'b0);
-  pipeRegEXMEM exmem(CLK, nRST, exmem_input, exmemValue, dpif.ihit, exmemFlush);
-  pipeRegMEMWB memwb(CLK, nRST, memwb_input, memwbValue, memwbEnable, 1'b0);
+  pipeRegIFID ifid(CLK, nRST, dpif.ihit, ifid_input, ifidValue, ifidEnable, ifidFlush);
+  pipeRegIDEX idex(CLK, nRST, dpif.ihit, idex_input, idexValue, dpif.ihit, idexFlush);
+  pipeRegEXMEM exmem(CLK, nRST, dpif.ihit, exmem_input, exmemValue, dpif.ihit, exmemFlush);
+  pipeRegMEMWB memwb(CLK, nRST, dpif.ihit, memwb_input, memwbValue, memwbEnable, 1'b0);
 
   // Datapath blocks
   register_file rf (CLK, nRST, rfif);
-  programCounter progCount (pc, idexValue.instr, extendOut, idexValue.rdat1, aluf.zero, countIfPC, newPC, incPC);
+  programCounter progCount (pc, idexValue.pc, idexValue.instr, extendOut, idexValue.rdat1, aluf.zero, countIfPC, newPC, incPC, jumpBranch);
   alu_file alu(aluf);
   control controler (ifidValue.instr, countIf, dpif.dhit, dpif.ihit);
+  
 
+  hazard_unit hazard(countIf.WEN,jumpBranch, ifidValue.instr[25:21], ifidValue.instr[20:16], idexValue.dest, exmemValue.dest, stallPC, ifidFlush, idexFlush, ifidFreze);
 
   assign dpif.imemREN = 1; // TODO: Pass halt signal through registers ~memwbValue.halt;
   assign dpif.dmemstore = exmemValue.rdat2;
@@ -220,8 +236,8 @@ module datapath (
   assign exmemFlush = ~dpif.ihit & dpif.dhit;
   assign dpif.dmemREN = exmemValue.dREN; // instead of request unit
   assign dpif.dmemWEN = exmemValue.dWEN; // instead of request unit
-
-
+  assign ifidEnable = dpif.ihit & ~ifidFreze;
+  
 
 
   /********** Program Counter Update **********/
@@ -231,7 +247,7 @@ module datapath (
         pc <= PC_INIT;
       end
       else begin  
-        if (dpif.ihit == 1) begin
+        if ((dpif.ihit == 1) && (stallPC == 0)) begin
           pc <= newPC;        
         end
         else begin
@@ -246,17 +262,7 @@ module datapath (
   assign rfif.rsel1 = ifidValue.instr[25:21];
   assign rfif.rsel2 = ifidValue.instr[20:16];
   assign rfif.WEN = memwbValue.WEN;
-  always_comb begin //wsel iputs
-    if (memwbValue.jl == 1) begin
-      rfif.wsel = 31;
-    end
-    else begin
-      if (memwbValue.regDst == 1)
-        rfif.wsel = memwbValue.instr[15:11];
-      else
-        rfif.wsel = memwbValue.instr[20:16];
-    end
-  end
+  assign rfif.wsel = memwbValue.dest;
 
   always_comb begin // wdat inputs
     if (memwbValue.lui == 1) 

@@ -11,7 +11,7 @@ braZ:
   jal   braR
   sw    $1, 4($2)
 end:
-  sw    $ra, 16($2)
+  sw    $ra, 16($2) #ra = 31
   HALT
 braR:
   or    $3, $zero, $ra

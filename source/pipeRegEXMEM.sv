@@ -11,7 +11,7 @@
 
 
 module pipeRegEXMEM(
-  input logic CLK, nRST,
+  input logic CLK, nRST, ihit,
   //two instances of the pipe_reg_if --> one as input and other as output
   pipe_reg_if prEXMEM_in,
   pipe_reg_if prEXMEM_out,
@@ -23,7 +23,7 @@ module pipeRegEXMEM(
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || flush == 1) 
+  	if (nRST == 0 || (flush == 1 )) // flush not on ihit 
     begin	  
       prEXMEM_out.regDst = 0;
       prEXMEM_out.branch = 0;
@@ -48,6 +48,7 @@ module pipeRegEXMEM(
       prEXMEM_out.rdat2 = 32'h0;
       prEXMEM_out.outputPort = 32'h0;
       prEXMEM_out.dmemload = 32'h0;
+      prEXMEM_out.dest = 5'h0;
     end
     else if (enable == 1) begin
       prEXMEM_out.regDst = prEXMEM_in.regDst;
@@ -73,6 +74,7 @@ module pipeRegEXMEM(
       prEXMEM_out.rdat2 = prEXMEM_in.rdat2;
       prEXMEM_out.outputPort = prEXMEM_in.outputPort; 
       prEXMEM_out.dmemload = prEXMEM_in.dmemload;
+      prEXMEM_out.dest = prEXMEM_in.dest;
     end
   end
 

@@ -11,7 +11,7 @@
 
 
 module pipeRegMEMWB(
-  input logic CLK, nRST,
+  input logic CLK, nRST, ihit,
   //two instances of the pipe_reg_if --> one as input and other as output
   pipe_reg_if prMEMWB_in,
   pipe_reg_if prMEMWB_out,
@@ -23,7 +23,7 @@ module pipeRegMEMWB(
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || flush == 1) 
+  	if (nRST == 0 || (flush == 1 && ihit == 1)) 
     begin	  
       prMEMWB_out.regDst = 0;
       prMEMWB_out.branch = 0;
@@ -48,6 +48,7 @@ module pipeRegMEMWB(
       prMEMWB_out.rdat2 = 32'h0;
       prMEMWB_out.outputPort = 32'h0;
       prMEMWB_out.dmemload = 32'h0;
+      prMEMWB_out.dest = 5'h0;
     end
     else if (enable == 1) begin
       prMEMWB_out.regDst = prMEMWB_in.regDst;
@@ -73,6 +74,7 @@ module pipeRegMEMWB(
       prMEMWB_out.rdat2 = prMEMWB_in.rdat2;
       prMEMWB_out.outputPort = prMEMWB_in.outputPort; 
       prMEMWB_out.dmemload = prMEMWB_in.dmemload;
+      prMEMWB_out.dest = prMEMWB_in.dest;
     end
   end
 
