@@ -13,21 +13,21 @@
 `include "pipe_reg_if.vh"
 
 module hazard_unit (
-  input logic WEN, jumpBranch,
-  input [4:0] rsel1, rsel2, idexWsel, exmemWsel,
+  input logic dREN, jumpBranch,
+  input [4:0] rsel1/*ifid*/, rsel2/*ifid*/, idexWsel, exmemWsel,
   output logic stallPC, ifidFlush, idexFlush, ifidFreeze
 );
   // import types
   import cpu_types_pkg::*;
 
   always_comb begin
-    if (((rsel1 == exmemWsel) || (rsel2 == exmemWsel)) && (exmemWsel != 0)) begin// && (WEN == 1)) begin
-      stallPC = 1;
+    if (((rsel1 == exmemWsel) || (rsel2 == exmemWsel)) && (exmemWsel != 0) ) begin //&& (WEN == 1)) begin
+      stallPC = 0; // 1
       ifidFlush = 0;
-      idexFlush = 1;
-      ifidFreeze = 1;
+      idexFlush = 0; //1
+      ifidFreeze = 0; //1
     end
-    else if (((rsel1 == idexWsel) || (rsel2 == idexWsel)) && (idexWsel != 0) ) begin//&& (WEN == 1)) begin
+    else if (((rsel1 == idexWsel) || (rsel2 == idexWsel)) && (idexWsel != 0) && (dREN == 1'b1)) begin // && (WEN == 1)) begin
       stallPC = 1;
       ifidFlush = 0;
       idexFlush = 1;

@@ -43,16 +43,6 @@ add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/instr
 add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/WEN
 add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/pc
 add wave -noupdate /system_tb/DUT/CPU/DP/rf/regs
-add wave -noupdate -divider Hazard
-add wave -noupdate /system_tb/DUT/CPU/DP/hazard/WEN
-add wave -noupdate /system_tb/DUT/CPU/DP/hazard/jumpBranch
-add wave -noupdate /system_tb/DUT/CPU/DP/hazard/rsel1
-add wave -noupdate /system_tb/DUT/CPU/DP/hazard/rsel2
-add wave -noupdate /system_tb/DUT/CPU/DP/hazard/idexWsel
-add wave -noupdate /system_tb/DUT/CPU/DP/hazard/exmemWsel
-add wave -noupdate /system_tb/DUT/CPU/DP/hazard/stallPC
-add wave -noupdate /system_tb/DUT/CPU/DP/hazard/ifidFlush
-add wave -noupdate /system_tb/DUT/CPU/DP/hazard/idexFlush
 add wave -noupdate -divider RFIF
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/WEN
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/wsel
@@ -61,37 +51,15 @@ add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rsel2
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/wdat
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rdat1
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rdat2
-add wave -noupdate -divider pc
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/pc
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/imemload
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/extendOut
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/rdat1
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/zero
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/newPC
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/incPC
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/jumpBranch
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/branchPC
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/mux1Out
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/mux2Out
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/branch
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/jump
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/jump2
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/regDst
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/branch
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/WEN
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/aluSrc
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/jmp
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/jl
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/jmpReg
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/memToReg
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/dREN
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/dWEN
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/lui
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/bne
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/zeroExt
-add wave -noupdate /system_tb/DUT/CPU/DP/progCount/countIf/shiftSel
+add wave -noupdate -divider forwarding_unit
+add wave -noupdate /system_tb/DUT/CPU/DP/forward/rsel1
+add wave -noupdate /system_tb/DUT/CPU/DP/forward/rsel2
+add wave -noupdate /system_tb/DUT/CPU/DP/forward/rdat1Fwd
+add wave -noupdate /system_tb/DUT/CPU/DP/forward/rdat2Fwd
+add wave -noupdate /system_tb/DUT/CPU/DP/forward/r1Fwd
+add wave -noupdate /system_tb/DUT/CPU/DP/forward/r2Fwd
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {441264 ps} 0}
+WaveRestoreCursors {{Cursor 1} {662435 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 139
@@ -107,4 +75,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {192236 ps} {672826 ps}
+WaveRestoreZoom {240295 ps} {720885 ps}

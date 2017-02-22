@@ -162,7 +162,7 @@ module datapath (
   assign exmem_input.incPC = idexValue.incPC;
   assign exmem_input.pc = idexValue.pc;
   assign exmem_input.rdat1 = idexValue.rdat1;
-  assign exmem_input.rdat2 = idexValue.rdat2;
+  //exmem_input.rdat2 moved below
   assign exmem_input.outputPort = aluf.outputPort;
   assign exmem_input.dmemload = 32'h0;
   assign exmem_input.dest = idexValue.dest;
@@ -189,7 +189,7 @@ module datapath (
   assign memwb_input.incPC = exmemValue.incPC;
   assign memwb_input.pc = exmemValue.pc;
   assign memwb_input.rdat1 = exmemValue.rdat1;
-  assign memwb_input.rdat2 = exmemValue.rdat2;
+  assign memwb_input.rdat2 = memwbValue.rdat2;
   assign memwb_input.outputPort = exmemValue.outputPort;
   assign memwb_input.dmemload = dpif.dmemload;
   assign memwb_input.dest = exmemValue.dest;
@@ -213,7 +213,9 @@ module datapath (
   assign countIfPC.aluCont = idexValue.aluCont;
   assign countIfPC.aluOp = idexValue.aluOp;
 
-  logic stallPC, jumpBranch, ifidFlush, idexFlush, ifidFreze, ifidEnable;
+  logic stallPC, jumpBranch, ifidFlush, idexFlush, ifidFreze, ifidEnable, r1Fwd, r2Fwd;
+  word_t rdat1Fwd, rdat2Fwd;
+
   // Pipelines
   pipeRegIFID ifid(CLK, nRST, dpif.ihit, ifid_input, ifidValue, ifidEnable, ifidFlush);
   pipeRegIDEX idex(CLK, nRST, dpif.ihit, idex_input, idexValue, dpif.ihit, idexFlush);
@@ -227,10 +229,10 @@ module datapath (
   control controler (ifidValue.instr, countIf, dpif.dhit, dpif.ihit);
   
 
-  hazard_unit hazard(countIf.WEN,jumpBranch, ifidValue.instr[25:21], ifidValue.instr[20:16], idexValue.dest, exmemValue.dest, stallPC, ifidFlush, idexFlush, ifidFreze);
+  hazard_unit hazard(countIf.dREN,jumpBranch, ifidValue.instr[25:21], ifidValue.instr[20:16], idexValue.dest, exmemValue.dest, stallPC, ifidFlush, idexFlush, ifidFreze);
+  forwarding_unit forward(idexValue.instr[25:21], idexValue.instr[20:16], idexValue, exmemValue, memwbValue, rdat1Fwd, rdat2Fwd, r1Fwd, r2Fwd);
 
   assign dpif.imemREN = 1; // TODO: Pass halt signal through registers ~memwbValue.halt;
-  assign dpif.dmemstore = exmemValue.rdat2;
   assign dpif.dmemaddr = exmemValue.outputPort;
   assign memwbEnable = dpif.ihit | dpif.dhit;
   assign exmemFlush = ~dpif.ihit & dpif.dhit;
@@ -294,18 +296,37 @@ module datapath (
 
 
   /********** ALU Inputs **********/
-  assign aluf.portA = idexValue.rdat1;
   assign aluf.aluop = idexValue.aluOp;
+  always_comb begin // setting port A
+    if (r1Fwd == 1)
+      aluf.portA = rdat1Fwd;
+    else
+      aluf.portA = idexValue.rdat1;
+  end
 
   always_comb begin // setting port B
   	if (idexValue.shiftSel == 1)
   		aluf.portB = idexValue.instr[10:6];
   	else if (idexValue.aluSrc == 1) 
   		aluf.portB = extendOut;
-  	else
-  		aluf.portB = idexValue.rdat2;
+  	else begin
+      if (r2Fwd == 1)
+        aluf.portB = rdat2Fwd;
+      else
+    		aluf.portB = idexValue.rdat2;
+    end
   end
   /********** ALU Inputs **********/
+
+  /********** Memory Write **********/
+
+  assign dpif.dmemstore = exmemValue.rdat2;
+  always_comb begin
+    if (r2Fwd == 1) 
+        exmem_input.rdat2 = rdat2Fwd;
+      else
+        exmem_input.rdat2 = idexValue.rdat2;
+  end
 
 
   /********** Halt Signal **********/
