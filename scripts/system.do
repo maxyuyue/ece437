@@ -21,30 +21,25 @@ add wave -noupdate /system_tb/DUT/CPU/DP/funcid
 add wave -noupdate /system_tb/DUT/CPU/DP/ifid/enable
 add wave -noupdate /system_tb/DUT/CPU/DP/ifid/flush
 add wave -noupdate /system_tb/DUT/CPU/DP/ifidValue/instr
-add wave -noupdate /system_tb/DUT/CPU/DP/ifidValue/pc
 add wave -noupdate -divider idexValue
 add wave -noupdate /system_tb/DUT/CPU/DP/opCex
 add wave -noupdate /system_tb/DUT/CPU/DP/funcex
 add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/instr
-add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/WEN
-add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/pc
+add wave -noupdate /system_tb/DUT/CPU/DP/idexValue/dest
 add wave -noupdate -divider exmemValue
 add wave -noupdate /system_tb/DUT/CPU/DP/opCmem
 add wave -noupdate /system_tb/DUT/CPU/DP/funcmem
 add wave -noupdate /system_tb/DUT/CPU/DP/exmem/enable
 add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/instr
-add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/WEN
-add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/pc
+add wave -noupdate /system_tb/DUT/CPU/DP/exmemValue/dest
 add wave -noupdate -divider memwbValue
 add wave -noupdate /system_tb/DUT/CPU/DP/opCwb
 add wave -noupdate /system_tb/DUT/CPU/DP/memwb/enable
 add wave -noupdate /system_tb/DUT/CPU/DP/funcwb
 add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/instr
-add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/WEN
-add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/pc
-add wave -noupdate /system_tb/DUT/CPU/DP/rf/regs
+add wave -noupdate /system_tb/DUT/CPU/DP/memwbValue/dest
 add wave -noupdate -divider RFIF
-add wave -noupdate /system_tb/DUT/CPU/DP/rfif/WEN
+add wave -noupdate /system_tb/DUT/CPU/DP/rf/regs
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/wsel
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rsel1
 add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rsel2
@@ -58,8 +53,19 @@ add wave -noupdate /system_tb/DUT/CPU/DP/forward/rdat1Fwd
 add wave -noupdate /system_tb/DUT/CPU/DP/forward/rdat2Fwd
 add wave -noupdate /system_tb/DUT/CPU/DP/forward/r1Fwd
 add wave -noupdate /system_tb/DUT/CPU/DP/forward/r2Fwd
+add wave -noupdate -divider Hazard
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/dREN
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/jumpBranch
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/rsel1
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/rsel2
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/idexWsel
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/exmemWsel
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/stallPC
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/ifidFlush
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/idexFlush
+add wave -noupdate /system_tb/DUT/CPU/DP/hazard/ifidFreeze
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {662435 ps} 0}
+WaveRestoreCursors {{Cursor 1} {1311776378 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 139
@@ -75,4 +81,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {240295 ps} {720885 ps}
+WaveRestoreZoom {1311703440 ps} {1312184030 ps}

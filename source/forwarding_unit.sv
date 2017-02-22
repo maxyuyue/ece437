@@ -15,7 +15,7 @@
 import cpu_types_pkg::*;
 
   module forwarding_unit (
-  input [4:0] rsel1/*ifid*/, rsel2/*ifid*/,
+  input [4:0] rsel1/*idex*/, rsel2/*idex*/,
   pipe_reg_if idexValue, exmemValue, memwbValue,
   output word_t rdat1Fwd, rdat2Fwd,
   output logic r1Fwd, r2Fwd

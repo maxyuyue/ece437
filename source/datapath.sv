@@ -135,8 +135,10 @@ module datapath (
     else begin
       if (countIf.regDst == 1)
         idex_input.dest = ifidValue.instr[15:11];
-      else
+      else //if (countIf.dWEN == 0)
         idex_input.dest = ifidValue.instr[20:16];
+      //else
+        //idex_input.dest = 5'h0; // no destination on store
     end
   end
 

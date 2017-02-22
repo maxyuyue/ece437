@@ -23,7 +23,7 @@ module pipeRegEXMEM(
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || (flush == 1 )) // flush not on ihit 
+  	if (nRST == 0) // flush not on ihit 
     begin	  
       prEXMEM_out.regDst = 0;
       prEXMEM_out.branch = 0;
@@ -76,6 +76,30 @@ module pipeRegEXMEM(
       prEXMEM_out.dmemload = prEXMEM_in.dmemload;
       prEXMEM_out.dest = prEXMEM_in.dest;
     end
+    else if (flush == 1 ) // scetch fix for forwarding
+    begin   
+      prEXMEM_out.regDst = 0;
+      prEXMEM_out.branch = 0;
+      prEXMEM_out.WEN = 0;
+      prEXMEM_out.aluSrc = 0;
+      prEXMEM_out.jmp = 0;
+      prEXMEM_out.jmpReg = 0;
+      prEXMEM_out.memToReg = 0;
+      prEXMEM_out.dREN = 0;
+      prEXMEM_out.dWEN = 0;
+      prEXMEM_out.bne = 0;
+      prEXMEM_out.zeroExt = 0;
+      prEXMEM_out.shiftSel = 0;
+      prEXMEM_out.aluCont = 0;
+      prEXMEM_out.aluOp = ALU_SLL;
+      prEXMEM_out.incPC = 32'h0;
+      prEXMEM_out.rdat1 = 32'h0;
+      prEXMEM_out.rdat2 = 32'h0;
+      prEXMEM_out.dmemload = 32'h0;
+    end
+
+
+
   end
 
 endmodule

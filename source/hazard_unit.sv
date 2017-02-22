@@ -27,7 +27,7 @@ module hazard_unit (
       idexFlush = 0; //1
       ifidFreeze = 0; //1
     end
-    else if (((rsel1 == idexWsel) || (rsel2 == idexWsel)) && (idexWsel != 0) && (dREN == 1'b1)) begin // && (WEN == 1)) begin
+    else if ((rsel2 == idexWsel) && (idexWsel != 0) && (dREN == 1'b1)) begin // && (WEN == 1)) begin
       stallPC = 1;
       ifidFlush = 0;
       idexFlush = 1;
