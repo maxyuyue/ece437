@@ -24,52 +24,62 @@ import cpu_types_pkg::*;
 
   always_comb begin
     // Forwarding of register 1
-    if ((exmemValue.dest == rsel1) && (exmemValue.dREN == 0) && (rsel1 !=0)) begin // if dren = 1 then pipeline stall
+    if((memwbValue.WEN) && (memwbValue.dest != 0) && !(exmemValue.WEN && (exmemValue.dest != 0) && (exmemValue.dest != rsel1)) && (memwbValue.dest == rsel1))
+      begin
+        r1Fwd = 1'b1;
+        if (memwbValue.lui == 1)
+          rdat1Fwd = {memwbValue.instr[15:0],16'b0000000000000000};
+        else if (memwbValue.jl == 1)
+          rdat1Fwd = memwbValue.pc + 4;
+        else if (memwbValue.dREN == 1)
+          rdat1Fwd = memwbValue.dmemload;
+        else
+          rdat1Fwd = memwbValue.outputPort;
+      end 
+
+    else if ((exmemValue.WEN) && (exmemValue.dest != 0) && (exmemValue.dest == rsel1)) 
+      begin // if dren = 1 then pipeline stall
       r1Fwd = 1'b1;
-      if (exmemValue.lui == 1)
-        rdat1Fwd = {exmemValue.instr[15:0],16'b0000000000000000};
-      else if (exmemValue.jl == 1)
-        rdat1Fwd = exmemValue.pc + 4;
-      else
-        rdat1Fwd = exmemValue.outputPort;
-    end
-    else if (memwbValue.dest == rsel1 && (rsel1 !=0)) begin
-      r1Fwd = 1'b1;
-      if (memwbValue.lui == 1)
-        rdat1Fwd = {memwbValue.instr[15:0],16'b0000000000000000};
-      else if (memwbValue.jl == 1)
-        rdat1Fwd = memwbValue.pc + 4;
-      else if (memwbValue.dREN == 1)
-        rdat1Fwd = memwbValue.dmemload;
-      else
-        rdat1Fwd = memwbValue.outputPort;
-    end
+        if (exmemValue.lui == 1)
+          rdat1Fwd = {exmemValue.instr[15:0],16'b0000000000000000};
+        else if (exmemValue.jl == 1)
+          rdat1Fwd = exmemValue.pc + 4;
+        else
+          rdat1Fwd = exmemValue.outputPort;
+      end
+
     else begin
       r1Fwd = 1'b0;
       rdat1Fwd = 32'h0; // don't care
     end
 
+
+
     // Forwarding of register 2
-    if ((exmemValue.dest == rsel2) && (exmemValue.dREN == 0) && (rsel2 !=0)) begin // if dren = 1 then pipeline stall
-      r2Fwd = 1'b1;
-      if (exmemValue.lui == 1)
-        rdat2Fwd = {exmemValue.instr[15:0],16'b0000000000000000};
-      else if (exmemValue.jl == 1)
-        rdat2Fwd = exmemValue.pc + 4;
-      else
-        rdat2Fwd = exmemValue.outputPort;
-    end
-    else if (memwbValue.dest == rsel2 && (rsel2 !=0)) begin
-      r2Fwd = 1'b1;
-      if (memwbValue.lui == 1)
-        rdat2Fwd = {memwbValue.instr[15:0],16'b0000000000000000};
-      else if (memwbValue.jl == 1)
-        rdat2Fwd = memwbValue.pc + 4;
-      else if (memwbValue.dREN == 1)
-        rdat2Fwd = memwbValue.dmemload;
-      else
-        rdat2Fwd = memwbValue.outputPort;
-    end
+    if((memwbValue.WEN) && (memwbValue.dest != 0) && !(exmemValue.WEN && (exmemValue.dest != 0) && (exmemValue.dest != rsel2)) && (memwbValue.dest == rsel2))
+      begin
+        r2Fwd = 1'b1;
+        if (memwbValue.lui == 1)
+          rdat2Fwd = {memwbValue.instr[15:0],16'b0000000000000000};
+        else if (memwbValue.jl == 1)
+          rdat2Fwd = memwbValue.pc + 4;
+        else if (memwbValue.dREN == 1)
+          rdat2Fwd = memwbValue.dmemload;
+        else
+          rdat2Fwd = memwbValue.outputPort;
+      end
+
+    else if ((exmemValue.WEN) && (exmemValue.dest != 0) && (exmemValue.dest == rsel2)) 
+      begin // if dren = 1 then pipeline stall
+        r2Fwd = 1'b1;
+        if (exmemValue.lui == 1)
+          rdat2Fwd = {exmemValue.instr[15:0],16'b0000000000000000};
+        else if (exmemValue.jl == 1)
+          rdat2Fwd = exmemValue.pc + 4;
+        else
+          rdat2Fwd = exmemValue.outputPort;
+      end
+
     else begin
       r2Fwd = 1'b0;
       rdat2Fwd = 32'h0; // don't care
