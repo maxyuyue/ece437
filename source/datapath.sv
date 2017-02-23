@@ -38,7 +38,7 @@ module datapath (
   logic exmemFlush;
 
   //output signal interfaces from pipeline registers
-  pipe_reg_if ifidValue(), idexValue(), exmemValue(), memwbValue();
+  pipe_reg_if ifidValue(), idexValue(), exmemValue(), memwbValue(), memwbValueOld();
   //input signal interfaces to pipeline registers
   pipe_reg_if ifid_input(), idex_input(), exmem_input(), memwb_input();
 
@@ -222,7 +222,7 @@ module datapath (
   pipeRegIFID ifid(CLK, nRST, dpif.ihit, ifid_input, ifidValue, ifidEnable, ifidFlush);
   pipeRegIDEX idex(CLK, nRST, dpif.ihit, idex_input, idexValue, dpif.ihit, idexFlush);
   pipeRegEXMEM exmem(CLK, nRST, dpif.ihit, exmem_input, exmemValue, dpif.ihit, exmemFlush);
-  pipeRegMEMWB memwb(CLK, nRST, dpif.ihit, memwb_input, memwbValue, memwbEnable, 1'b0);
+  pipeRegMEMWB memwb(CLK, nRST, dpif.ihit, memwb_input, memwbValue, memwbValueOld, memwbEnable, 1'b0);
 
   // Datapath blocks
   register_file rf (CLK, nRST, rfif);
@@ -232,7 +232,7 @@ module datapath (
   
 
   hazard_unit hazard(countIf.dREN,jumpBranch, ifidValue.instr[25:21], ifidValue.instr[20:16], idexValue.dest, exmemValue.dest, stallPC, ifidFlush, idexFlush, ifidFreze);
-  forwarding_unit forward(idexValue.instr[25:21], idexValue.instr[20:16], idexValue, exmemValue, memwbValue, rdat1Fwd, rdat2Fwd, r1Fwd, r2Fwd);
+  forwarding_unit forward(idexValue.instr[25:21], idexValue.instr[20:16], idexValue, exmemValue, memwbValue, memwbValueOld, rdat1Fwd, rdat2Fwd, r1Fwd, r2Fwd);
 
   assign dpif.imemREN = 1; // TODO: Pass halt signal through registers ~memwbValue.halt;
   assign dpif.dmemaddr = exmemValue.outputPort;
