@@ -16,8 +16,7 @@ module pipeRegIFID(
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || (flush == 1 && ihit == 1)) 
-    begin	  
+  	if (nRST == 1'b0) begin   
       prIFID_out.regDst = 0;
       prIFID_out.branch = 0;
       prIFID_out.WEN = 0;
@@ -43,6 +42,33 @@ module pipeRegIFID(
       prIFID_out.dmemload = 32'h0;
       prIFID_out.dest = 5'h0;
     end
+    else if (flush == 1'b1 && ihit == 1'b1) begin // same as nRST
+      prIFID_out.regDst = 0;
+      prIFID_out.branch = 0;
+      prIFID_out.WEN = 0;
+      prIFID_out.aluSrc = 0;
+      prIFID_out.jmp = 0;
+      prIFID_out.jl = 0;
+      prIFID_out.jmpReg = 0;
+      prIFID_out.memToReg = 0;
+      prIFID_out.dREN = 0;
+      prIFID_out.dWEN = 0;
+      prIFID_out.lui = 0;
+      prIFID_out.bne = 0;
+      prIFID_out.zeroExt = 0;
+      prIFID_out.shiftSel = 0;
+      prIFID_out.aluCont = 0;
+      prIFID_out.aluOp = ALU_SLL;
+      prIFID_out.instr = 32'h0;
+      prIFID_out.incPC = 32'h0;
+      prIFID_out.pc = 32'h0;
+      prIFID_out.rdat1 = 32'h0;
+      prIFID_out.rdat2 = 32'h0;
+      prIFID_out.outputPort = 32'h0;
+      prIFID_out.dmemload = 32'h0;
+      prIFID_out.dest = 5'h0;
+    end
+    
     else if (enable == 1) begin
       prIFID_out.regDst = prIFID_in.regDst;
       prIFID_out.branch = prIFID_in.branch;
