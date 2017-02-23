@@ -21,13 +21,7 @@ module hazard_unit (
   import cpu_types_pkg::*;
 
   always_comb begin
-    if (((rsel1 == exmemWsel) || (rsel2 == exmemWsel)) && (exmemWsel != 0) ) begin //&& (WEN == 1)) begin
-      stallPC = 0; // 1
-      ifidFlush = 0;
-      idexFlush = 0; //1
-      ifidFreeze = 0; //1
-    end
-    else if ((rsel2 == idexWsel) && (idexWsel != 0) && (dREN == 1'b1)) begin // && (WEN == 1)) begin
+    if ((rsel2 == idexWsel) && (idexWsel != 0) && (dREN == 1'b1)) begin // && (WEN == 1)) begin
       stallPC = 1;
       ifidFlush = 0;
       idexFlush = 1;

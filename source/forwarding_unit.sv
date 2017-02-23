@@ -24,7 +24,7 @@ import cpu_types_pkg::*;
 
   always_comb begin
     // Forwarding of register 1
-    if((memwbValue.WEN) && (memwbValue.dest != 0) && !(exmemValue.WEN && (exmemValue.dest != 0) && (exmemValue.dest != rsel1)) && (memwbValue.dest == rsel1))
+    if((memwbValue.WEN) && (memwbValue.dest != 0) && !(exmemValue.WEN && (exmemValue.dest != 0) && (exmemValue.dest == rsel1)) && (memwbValue.dest == rsel1))
       begin
         r1Fwd = 1'b1;
         if (memwbValue.lui == 1)
@@ -48,7 +48,7 @@ import cpu_types_pkg::*;
           rdat1Fwd = exmemValue.outputPort;
       end
 
-    else if((memwbValueOld.WEN) && (memwbValueOld.dest != 0) && !(exmemValue.WEN && (exmemValue.dest != 0) && (exmemValue.dest != rsel1)) && (memwbValueOld.dest == rsel1))
+    else if((memwbValueOld.WEN) && (memwbValueOld.dest != 0)  && (memwbValueOld.dest == rsel1))
       begin
         r1Fwd = 1'b1;
         if (memwbValueOld.lui == 1)
@@ -69,7 +69,7 @@ import cpu_types_pkg::*;
 
 
     // Forwarding of register 2
-    if((memwbValue.WEN) && (memwbValue.dest != 0) && !(exmemValue.WEN && (exmemValue.dest != 0) && (exmemValue.dest != rsel2)) && (memwbValue.dest == rsel2))
+    if((memwbValue.WEN) && (memwbValue.dest != 0) && !(exmemValue.WEN && (exmemValue.dest != 0) && (exmemValue.dest == rsel2)) && (memwbValue.dest == rsel2))
       begin
         r2Fwd = 1'b1;
         if (memwbValue.lui == 1)
@@ -93,7 +93,7 @@ import cpu_types_pkg::*;
           rdat2Fwd = exmemValue.outputPort;
     end
 
-    else if((memwbValueOld.WEN) && (memwbValueOld.dest != 0) && !(exmemValue.WEN && (exmemValue.dest != 0) && (exmemValue.dest != rsel2)) && (memwbValueOld.dest == rsel2))
+    else if((memwbValueOld.WEN) && (memwbValueOld.dest != 0) &&  (memwbValueOld.dest == rsel2))
       begin
         r2Fwd = 1'b1;
         if (memwbValueOld.lui == 1)
