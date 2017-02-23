@@ -23,8 +23,7 @@ module pipeRegIDEX (
   
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
-  	if (nRST == 0 || (flush == 1 && ihit == 1)) 
-    begin	  
+  	if (nRST == 0) begin	  
       prIDEX_out.regDst = 0;
       prIDEX_out.branch = 0;
       prIDEX_out.WEN = 0;
@@ -50,6 +49,34 @@ module pipeRegIDEX (
       prIDEX_out.dmemload = 32'h0;
       prIDEX_out.dest = 5'h0;
     end
+
+    else if (flush == 1 && ihit == 1) begin
+      prIDEX_out.regDst = 0;
+      prIDEX_out.branch = 0;
+      prIDEX_out.WEN = 0;
+      prIDEX_out.aluSrc = 0;
+      prIDEX_out.jmp = 0;
+      prIDEX_out.jl = 0;
+      prIDEX_out.jmpReg = 0;
+      prIDEX_out.memToReg = 0;
+      prIDEX_out.dREN = 0;
+      prIDEX_out.dWEN = 0;
+      prIDEX_out.lui = 0;
+      prIDEX_out.bne = 0;
+      prIDEX_out.zeroExt = 0;
+      prIDEX_out.shiftSel = 0;
+      prIDEX_out.aluCont = 0;
+      prIDEX_out.aluOp = ALU_SLL;
+      prIDEX_out.instr = 32'h0;
+      prIDEX_out.incPC = 32'h0;
+      prIDEX_out.pc = 32'h0;
+      prIDEX_out.rdat1 = 32'h0;
+      prIDEX_out.rdat2 = 32'h0;
+      prIDEX_out.outputPort = 32'h0;
+      prIDEX_out.dmemload = 32'h0;
+      prIDEX_out.dest = 5'h0;
+    end
+    
     else if (enable == 1) begin
       prIDEX_out.regDst = prIDEX_in.regDst;
       prIDEX_out.branch = prIDEX_in.branch;
