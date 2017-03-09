@@ -1,13 +1,13 @@
 // data path interface
-`include "pipe_reg_if.vh"
+`include "pipe_reg_ifid_if.vh"
 `include "cpu_types_pkg.vh"
 
 
 module pipeRegIFID(
   input logic CLK, nRST, ihit,
   //two instances of the pipe_reg_if --> one as input and other as output
-  pipe_reg_if prIFID_in,
-  pipe_reg_if prIFID_out,
+  pipe_reg_ifid_if prIFID_in,
+  pipe_reg_ifid_if prIFID_out,
   input logic enable, flush
   );
   // import types
@@ -17,83 +17,22 @@ module pipeRegIFID(
   //write on positive edge of clock
   always_ff @(posedge CLK or negedge nRST) begin
   	if (nRST == 1'b0) begin   
-      prIFID_out.regDst = 0;
-      prIFID_out.branch = 0;
-      prIFID_out.WEN = 0;
-      prIFID_out.aluSrc = 0;
-      prIFID_out.jmp = 0;
-      prIFID_out.jl = 0;
-      prIFID_out.jmpReg = 0;
-      prIFID_out.memToReg = 0;
-      prIFID_out.dREN = 0;
-      prIFID_out.dWEN = 0;
-      prIFID_out.lui = 0;
-      prIFID_out.bne = 0;
-      prIFID_out.zeroExt = 0;
-      prIFID_out.shiftSel = 0;
-      prIFID_out.aluCont = 0;
       prIFID_out.aluOp = ALU_SLL;
       prIFID_out.instr = 32'h0;
       prIFID_out.incPC = 32'h0;
       prIFID_out.pc = 32'h0;
-      prIFID_out.rdat1 = 32'h0;
-      prIFID_out.rdat2 = 32'h0;
-      prIFID_out.outputPort = 32'h0;
-      prIFID_out.dmemload = 32'h0;
-      prIFID_out.dest = 5'h0;
     end
     else if (flush == 1'b1 && ihit == 1'b1) begin // same as nRST
-      prIFID_out.regDst = 0;
-      prIFID_out.branch = 0;
-      prIFID_out.WEN = 0;
-      prIFID_out.aluSrc = 0;
-      prIFID_out.jmp = 0;
-      prIFID_out.jl = 0;
-      prIFID_out.jmpReg = 0;
-      prIFID_out.memToReg = 0;
-      prIFID_out.dREN = 0;
-      prIFID_out.dWEN = 0;
-      prIFID_out.lui = 0;
-      prIFID_out.bne = 0;
-      prIFID_out.zeroExt = 0;
-      prIFID_out.shiftSel = 0;
-      prIFID_out.aluCont = 0;
       prIFID_out.aluOp = ALU_SLL;
       prIFID_out.instr = 32'h0;
       prIFID_out.incPC = 32'h0;
       prIFID_out.pc = 32'h0;
-      prIFID_out.rdat1 = 32'h0;
-      prIFID_out.rdat2 = 32'h0;
-      prIFID_out.outputPort = 32'h0;
-      prIFID_out.dmemload = 32'h0;
-      prIFID_out.dest = 5'h0;
     end
-    
     else if (enable == 1) begin
-      prIFID_out.regDst = prIFID_in.regDst;
-      prIFID_out.branch = prIFID_in.branch;
-      prIFID_out.WEN = prIFID_in.WEN;
-      prIFID_out.aluSrc = prIFID_in.aluSrc;
-      prIFID_out.jmp = prIFID_in.jmp;
-      prIFID_out.jl = prIFID_in.jl;
-      prIFID_out.jmpReg = prIFID_in.jmpReg;
-      prIFID_out.memToReg = prIFID_in.memToReg;
-      prIFID_out.dREN = prIFID_in.dREN;
-      prIFID_out.dWEN = prIFID_in.dWEN;
-      prIFID_out.lui = prIFID_in.lui;
-      prIFID_out.bne = prIFID_in.bne;
-      prIFID_out.zeroExt = prIFID_in.zeroExt;
-      prIFID_out.shiftSel = prIFID_in.shiftSel;
-      prIFID_out.aluCont = prIFID_in.aluCont;
       prIFID_out.aluOp = prIFID_in.aluOp;
       prIFID_out.instr = prIFID_in.instr;
       prIFID_out.incPC = prIFID_in.incPC;
       prIFID_out.pc = prIFID_in.pc;
-      prIFID_out.rdat1 = prIFID_in.rdat1;
-      prIFID_out.rdat2 = prIFID_in.rdat2;
-      prIFID_out.outputPort = prIFID_in.outputPort;   
-      prIFID_out.dmemload = prIFID_in.dmemload; 
-      prIFID_out.dest = prIFID_in.dest;
     end
   end
 
