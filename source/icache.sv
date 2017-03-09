@@ -57,20 +57,14 @@ typedef struct packed {
   always_comb
 		begin
       dcif.ihit = 0;
-      cif.iREN = 0;
-      cif.iaddr = 0;
-
       if(isValid && isHit && dcif.imemREN) //Query found in cache
         begin
           dcif.ihit = 1;
         end
-      else  //fetch value from memory
-        begin
-          cif.iREN = dcif.imemREN;
-          cif.iaddr = dcif.imemaddr;
-        end
 		end
 
+   assign cif.iREN = dcif.imemREN && ~dcif.ihit; //and not  ihit
+   assign cif.iaddr = dcif.imemaddr;
    assign dcif.imemload = cif.iload; 
 
   endmodule // icache
