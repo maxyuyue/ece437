@@ -12,6 +12,7 @@
 `include "register_file_if.vh"
 `include "alu_file_if.vh"
 `include "pipe_reg_if.vh"
+`include "pipe_reg_ifid_if.vh"
 
 module datapath (
   input logic CLK, nRST,
@@ -23,85 +24,44 @@ module datapath (
   // pc init
   parameter PC_INIT = 0;
 
+  // Declared connections and variables
+  word_t  pc, newPC, incPC, extendOut, rdat1Fwd, rdat2Fwd;
+  opcode_t opC, opCif, opCid, opCex, opCmem, opCwb;
+  funct_t func, funcif, funcid, funcex, funcmem, funcwb;
+  logic memwbEnable, exmemFlush, stallPC, jumpBranch, ifidFlush, idexFlush, ifidFreze, ifidEnable, r1Fwd, r2Fwd;
+
   // Declared interfaces 
   control_if countIf(), countIfPC();
   register_file_if rfif();
   alu_file_if aluf ();
+  pipe_reg_if idexValue(), exmemValue(), memwbValue(), memwbValueOld(); //output signal interfaces from pipeline registers
+  pipe_reg_if idex_input(), exmem_input(), memwb_input(); //input signal interfaces to pipeline registers
+  pipe_reg_ifid_if ifidValue(), ifid_input();
 
-  // Declared connections and variables
-  word_t	pc, newPC, incPC;
-  word_t 	extendOut;
-  opcode_t opC, opCif, opCid, opCex, opCmem, opCwb;
-  funct_t func, funcif, funcid, funcex, funcmem, funcwb;
-
-  logic memwbEnable;
-  logic exmemFlush;
-
-  //output signal interfaces from pipeline registers
-  pipe_reg_if ifidValue(), idexValue(), exmemValue(), memwbValue(), memwbValueOld();
-  //input signal interfaces to pipeline registers
-  pipe_reg_if ifid_input(), idex_input(), exmem_input(), memwb_input();
-
-/*
-  always_ff @(CLK or negedge nRST) begin // Just for debugging
-    if (nRST == 0 ) begin
-      opC = opcode_t'(6'b000000);
-      func = funct_t'(6'b000000);
-      opCifid = opcode_t'(6'b000000);
-      funcifid = funct_t'(6'b000000);
-      opCidex = opcode_t'(6'b000000);
-      funcidex = funct_t'(6'b000000);
-      opCexmem = opcode_t'(6'b000000);
-      funcexmem = funct_t'(6'b000000);
-      opCmemwb = opcode_t'(6'b000000);
-      funcmemwb = funct_t'(6'b000000);
+  // Just used for debugging
+  always_comb begin
+    if (dpif.ihit == 1) begin
+      opC = opcode_t'(dpif.imemload [31:26]);
+      func = funct_t'(dpif.imemload[5:0]);
+      opCif = opcode_t'(dpif.imemload [31:26]);
+      funcif = funct_t'(dpif.imemload[5:0]);
+      opCid = opcode_t'(ifidValue.instr[31:26]);
+      funcid = funct_t'(ifidValue.instr[5:0]);
+      opCex = opcode_t'(idexValue.instr [31:26]);
+      funcex = funct_t'(idexValue.instr[5:0]);
+      opCmem = opcode_t'(exmemValue.instr [31:26]);
+      funcmem = funct_t'(exmemValue.instr[5:0]);
+      opCwb = opcode_t'(memwbValue.instr [31:26]);
+      funcwb = funct_t'(memwbValue.instr[5:0]);
     end
-    else if (dpif.ihit == 1) begin*/
-      always_comb begin
-        if (dpif.ihit == 1) begin
-          opC = opcode_t'(dpif.imemload [31:26]);
-          func = funct_t'(dpif.imemload[5:0]);
-          opCif = opcode_t'(dpif.imemload [31:26]);
-          funcif = funct_t'(dpif.imemload[5:0]);
-          opCid = opcode_t'(ifidValue.instr[31:26]);
-          funcid = funct_t'(ifidValue.instr[5:0]);
-          opCex = opcode_t'(idexValue.instr [31:26]);
-          funcex = funct_t'(idexValue.instr[5:0]);
-          opCmem = opcode_t'(exmemValue.instr [31:26]);
-          funcmem = funct_t'(exmemValue.instr[5:0]);
-          opCwb = opcode_t'(memwbValue.instr [31:26]);
-          funcwb = funct_t'(memwbValue.instr[5:0]);
-        end
-      end
-   /* end
-  end*/
+  end
+
 
   //IFID pipeline register input
-  assign ifid_input.regDst = 0;
-  assign ifid_input.branch = 0;
-  assign ifid_input.WEN = 0;
-  assign ifid_input.aluSrc = 0;
-  assign ifid_input.jmp = 0;
-  assign ifid_input.jl = 0;
-  assign ifid_input.jmpReg = 0;
-  assign ifid_input.memToReg = 0;
-  assign ifid_input.dREN = 0;
-  assign ifid_input.dWEN = 0;
-  assign ifid_input.lui = 0;
-  assign ifid_input.bne = 0;
-  assign ifid_input.zeroExt = 0;
-  assign ifid_input.shiftSel = 0;
-  assign ifid_input.aluCont = 0;
   assign ifid_input.aluOp = ALU_SLL;
   assign ifid_input.instr = dpif.imemload;
   assign ifid_input.incPC = incPC;
   assign ifid_input.pc = pc;
-  assign ifid_input.rdat1 = 32'h0;
-  assign ifid_input.rdat2 = 32'h0;
-  assign ifid_input.outputPort = 32'h0;
-  assign ifid_input.dmemload = 32'h0;
-  assign ifid_input.dest = 5'h0;
-
 
 
   //IDEX pipeline register input
@@ -112,14 +72,12 @@ module datapath (
   assign idex_input.jmp = countIf.jmp;
   assign idex_input.jl = countIf.jl;
   assign idex_input.jmpReg = countIf.jmpReg;
-  assign idex_input.memToReg = countIf.memToReg;
   assign idex_input.dREN = countIf.dREN;
   assign idex_input.dWEN = countIf.dWEN;
   assign idex_input.lui = countIf.lui;
   assign idex_input.bne = countIf.bne;
   assign idex_input.zeroExt = countIf.zeroExt;
   assign idex_input.shiftSel = countIf.shiftSel;
-  assign idex_input.aluCont = countIf.aluCont;
   assign idex_input.aluOp = countIf.aluOp;
   assign idex_input.instr = ifidValue.instr;
   assign idex_input.incPC = ifidValue.incPC;
@@ -135,10 +93,8 @@ module datapath (
     else begin
       if (countIf.regDst == 1)
         idex_input.dest = ifidValue.instr[15:11];
-      else //if (countIf.dWEN == 0)
+      else
         idex_input.dest = ifidValue.instr[20:16];
-      //else
-        //idex_input.dest = 5'h0; // no destination on store
     end
   end
 
@@ -151,14 +107,12 @@ module datapath (
   assign exmem_input.jmp = idexValue.jmp;
   assign exmem_input.jl = idexValue.jl;
   assign exmem_input.jmpReg = idexValue.jmpReg;
-  assign exmem_input.memToReg = idexValue.memToReg;
   assign exmem_input.dREN = idexValue.dREN;
   assign exmem_input.dWEN = idexValue.dWEN;
   assign exmem_input.lui = idexValue.lui;
   assign exmem_input.bne = idexValue.bne;
   assign exmem_input.zeroExt = idexValue.zeroExt;
   assign exmem_input.shiftSel = idexValue.shiftSel;
-  assign exmem_input.aluCont = idexValue.aluCont;
   assign exmem_input.aluOp = idexValue.aluOp;
   assign exmem_input.instr = idexValue.instr;
   assign exmem_input.incPC = idexValue.incPC;
@@ -178,14 +132,12 @@ module datapath (
   assign memwb_input.jmp = exmemValue.jmp;
   assign memwb_input.jl = exmemValue.jl;
   assign memwb_input.jmpReg = exmemValue.jmpReg;
-  assign memwb_input.memToReg = exmemValue.memToReg;
   assign memwb_input.dREN = exmemValue.dREN;
   assign memwb_input.dWEN = exmemValue.dWEN;
   assign memwb_input.lui = exmemValue.lui;
   assign memwb_input.bne = exmemValue.bne;
   assign memwb_input.zeroExt = exmemValue.zeroExt;
   assign memwb_input.shiftSel = exmemValue.shiftSel;
-  assign memwb_input.aluCont = exmemValue.aluCont;
   assign memwb_input.aluOp = exmemValue.aluOp;
   assign memwb_input.instr = exmemValue.instr;
   assign memwb_input.incPC = exmemValue.incPC;
@@ -205,18 +157,15 @@ module datapath (
   assign countIfPC.jmp = idexValue.jmp;
   assign countIfPC.jl = idexValue.jl;
   assign countIfPC.jmpReg = idexValue.jmpReg;
-  assign countIfPC.memToReg = idexValue.memToReg;
   assign countIfPC.dREN = idexValue.dREN;
   assign countIfPC.dWEN = idexValue.dWEN;
   assign countIfPC.lui = idexValue.lui;
   assign countIfPC.zeroExt = idexValue.zeroExt;
   assign countIfPC.bne = idexValue.bne;
   assign countIfPC.shiftSel = idexValue.shiftSel;
-  assign countIfPC.aluCont = idexValue.aluCont;
   assign countIfPC.aluOp = idexValue.aluOp;
 
-  logic stallPC, jumpBranch, ifidFlush, idexFlush, ifidFreze, ifidEnable, r1Fwd, r2Fwd;
-  word_t rdat1Fwd, rdat2Fwd;
+
 
   // Pipelines
   pipeRegIFID ifid(CLK, nRST, dpif.ihit, ifid_input, ifidValue, ifidEnable, ifidFlush);
@@ -230,11 +179,11 @@ module datapath (
   alu_file alu(aluf);
   control controler (ifidValue.instr, countIf, dpif.dhit, dpif.ihit);
   
-
   hazard_unit hazard(countIf.dREN,jumpBranch, ifidValue.instr[25:21], ifidValue.instr[20:16], idexValue.dest, exmemValue.dest, stallPC, ifidFlush, idexFlush, ifidFreze);
   forwarding_unit forward(idexValue.instr[25:21], idexValue.instr[20:16], idexValue, exmemValue, memwbValue, memwbValueOld, rdat1Fwd, rdat2Fwd, r1Fwd, r2Fwd);
 
-  assign dpif.imemREN = 1; // TODO: Pass halt signal through registers ~memwbValue.halt;
+
+  assign dpif.imemREN = 1;
   assign dpif.dmemaddr = exmemValue.outputPort;
   assign memwbEnable = dpif.ihit | dpif.dhit;
   assign exmemFlush = ~dpif.ihit & dpif.dhit;
@@ -275,7 +224,7 @@ module datapath (
       if (memwbValue.jl == 1)
         rfif.wdat = memwbValue.pc +4;
       else begin
-        if (memwbValue.memToReg == 1)
+        if (memwbValue.dREN == 1)
           rfif.wdat = memwbValue.dmemload;
         else 
           rfif.wdat = memwbValue.outputPort;
@@ -320,8 +269,8 @@ module datapath (
   end
   /********** ALU Inputs **********/
 
-  /********** Memory Write **********/
 
+  /********** Memory Write **********/
   assign dpif.dmemstore = exmemValue.rdat2;
   always_comb begin
     if (r2Fwd == 1) 
@@ -329,6 +278,7 @@ module datapath (
       else
         exmem_input.rdat2 = idexValue.rdat2;
   end
+  /********** Memory Write **********/
 
 
   /********** Halt Signal **********/
