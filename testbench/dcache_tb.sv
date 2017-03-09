@@ -77,8 +77,18 @@ module dcache_tb;
   parameter PERIOD = 10;
 
   initial begin
+    // Initialization
     nRST = 0;
+    cif.dwait = 1;
+    cif.dload = 32'hBAD1BAD1;
+    dcif.halt = 0;
+    dcif.dmemWEN = 0;
+    dcif.dmemaddr = 32'hBAD1BAD1;
+    dcif.dmemstore = 32'hBAD1BAD1;
+    dcif.dmemREN = 0;
     #(PERIOD);
+
+    // Write miss
     nRST = 1;
     dcif.dmemWEN = 1;
     dcif.dmemaddr = 1234;
@@ -88,8 +98,18 @@ module dcache_tb;
     #(PERIOD);
     #(PERIOD);
     cif.dwait = 0;
-    cif.dload = 2468;
+    cif.dload = 2468; // finish write
+    dcif.dmemWEN = 0;
+    dcif.dmemaddr = 32'hBAD1BAD1;
+    dcif.dmemstore = 32'hBAD1BAD1;
+    dcif.dmemREN = 0;
+    
+    // Read hit
     #(PERIOD);
+    //cif.dwait = 1; 
+    cif.dload = 32'hBAD1BAD1;
+    dcif.dmemREN = 1;
+    dcif.dmemaddr = 1234;
     #(PERIOD);
   end
 

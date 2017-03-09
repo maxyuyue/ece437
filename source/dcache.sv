@@ -41,11 +41,21 @@ typedef struct packed {
 
   // State machine
   always_comb begin
+    // Variable defaults
     dcacheNext = dcache;
-    if (state == IDLE) begin
-      dcif.dhit = 0;
-      dcif.dmemload = '0;
+    nextState = IDLE;
+    // DCIF defaults
+    dcif.dmemload = 32'hBAD1BAD1;
+    dcif.dhit = 0;  
+    dcif.flushed = 0;
+    // Cache default outputs
+    cif.daddr = 32'hBAD1BAD1;
+    cif.dstore = 32'hBAD1BAD1;
+    cif.dREN = 0;
+    cif.dWEN = 0;
 
+
+    if (state == IDLE) begin
       if ((dcache[query.idx][0].tag == query.tag) && (dcache[query.idx][0].valid == 1) && (dcif.dmemREN == 1)) begin // hit loc 0 for read
         dcif.dmemload = dcache[query.idx][0].data[query.blkoff];
         dcif.dhit = 1;
@@ -57,12 +67,12 @@ typedef struct packed {
         nextState = IDLE;
       end
       else if ((dcache[query.idx][0].tag == query.tag) && (dcache[query.idx][0].valid == 1) && (dcif.dmemWEN == 1)) begin // hit loc 0 for write
-        //dcache[query.idx][0].data[query.blkoff] = dcif.dmemstore;
+        dcacheNext[query.idx][0].data[query.blkoff] = dcif.dmemstore;
         dcif.dhit = 1;
         nextState = IDLE;
       end
       else if ((dcache[query.idx][1].tag == query.tag) && (dcache[query.idx][1].valid == 1) && (dcif.dmemWEN == 1)) begin // hit loc 1 for write
-        //dcache[query.idx][1].data[query.blkoff] = dcif.dmemstore;
+        dcacheNext[query.idx][1].data[query.blkoff] = dcif.dmemstore;
         dcif.dhit = 1;
         nextState = IDLE;
       end
