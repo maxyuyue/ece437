@@ -12,14 +12,14 @@ module icache (
   caches_if.caches cif
 );
   // import types
-  import cpu_types_pkg::word_t;
+  import cpu_types_pkg::*;
 
   logic[31:0] instr, new_instr;
   icachef_t query;
-  logic isHit, isValid;
+  logic isHit, isValid, curr_valid_bit;
 
   //icache
-  icachef_t[15:0] info; //tag, index and byte offset
+  icachef_t info [16]; //tag, index and byte offset
   logic[15:0] valid_bit;  //valid bit for each slot
   logic[15:0][31:0] data; //data in each slot
 
@@ -36,7 +36,7 @@ module icache (
   	begin
       if(!nRST)
         begin
-          instr <= 32b'0;
+          instr <= 32'b0;
           for(i = 0; i < 16; i++)
             begin
               valid_bit[i] <= 0;
@@ -45,6 +45,7 @@ module icache (
       else
         begin
           instr <= new_instr;
+          valid_bit[query.idx] <= curr_valid_bit;
         end
  		end
 
@@ -55,12 +56,14 @@ module icache (
       dcif.imemload = 0;
       cif.iREN = 0;
       cif.iaddr = 0;
+      curr_valid_bit = 0;
 
       if(isValid && isHit) //Query found in cache
         begin
           dcif.imemload = data[query.idx];
           dcif.ihit = 1;
           new_instr = data[query.idx];
+          curr_valid_bit = 1;
         end
       else  //fetch value from memory
         begin
@@ -68,7 +71,7 @@ module icache (
           cif.iaddr = dcif.imemaddr;
           if(~cif.iwait)
             begin
-              valid_bit[query.idx] = 1;
+              curr_valid_bit = 1;
               data[query.idx] = cif.iload;
               info[query.idx].tag = query.tag;
               info[query.idx].idx = query.idx;
