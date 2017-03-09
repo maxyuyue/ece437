@@ -18,13 +18,14 @@ module caches (
   datapath_cache_if.cache dcif,
   caches_if.caches cif
 );
-  /*
+  
   // icache
   icache  ICACHE(CLK, nRST, dcif, cif);
   // dcache
   dcache  DCACHE(CLK, nRST, dcif, cif);
-  */
   
+  
+  /*
    // dcache invalidate before halt handled by dcache when exists
   assign dcif.flushed = dcif.halt;
 
@@ -41,6 +42,6 @@ module caches (
   assign cif.dstore = dcif.dmemstore;
   assign cif.iaddr = dcif.imemaddr;
   assign cif.daddr = dcif.dmemaddr;
-  
+  */
 
 endmodule
