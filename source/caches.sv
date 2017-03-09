@@ -6,18 +6,26 @@
 */
 
 
+// interfaces
+`include "datapath_cache_if.vh"
+`include "caches_if.vh"
+
+// cpu types
+`include "cpu_types_pkg.vh"
+
 module caches (
   input logic CLK, nRST,
   datapath_cache_if.cache dcif,
-  caches_if cif
+  caches_if.caches cif
 );
-
+  /*
   // icache
-  //icache  ICACHE(dcif, cif);
+  icache  ICACHE(CLK, nRST, dcif, cif);
   // dcache
-  //dcache  DCACHE(dcif, cif);
-
-  // dcache invalidate before halt handled by dcache when exists
+  dcache  DCACHE(CLK, nRST, dcif, cif);
+  */
+  
+   // dcache invalidate before halt handled by dcache when exists
   assign dcif.flushed = dcif.halt;
 
   //singlecycle
@@ -33,5 +41,6 @@ module caches (
   assign cif.dstore = dcif.dmemstore;
   assign cif.iaddr = dcif.imemaddr;
   assign cif.daddr = dcif.dmemaddr;
+  
 
 endmodule

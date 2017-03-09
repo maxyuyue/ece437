@@ -39,9 +39,6 @@ module hazard_unit (
       idexFlush = 0;
       ifidFreeze = 0;
     end
-
-
   end
-  
 
 endmodule

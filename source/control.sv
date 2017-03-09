@@ -17,7 +17,7 @@
       );
 
   // Outputs
-    // logic   regDst, branch, WEN, aluSrc, jmp, jl, jmpReg, memToReg, dREN, dWEN, lui, bne, zeroExt, aluCont;
+    // logic   regDst, branch, WEN, aluSrc, jmp, jl, jmpReg, dREN, dWEN, lui, bne, zeroExt;
   // Inputs
     // logic   dhit, ihit, halt;
 
@@ -34,7 +34,6 @@
         contIf.regDst = 1;
         contIf.branch = 0;
         contIf.aluSrc = 0;
-        contIf.memToReg = 0;
         contIf.dREN = 0;
         contIf.dWEN = 0;
         contIf.jmp = 0;
@@ -117,7 +116,6 @@
         contIf.branch = 0;
         contIf.WEN = iHit;
         contIf.aluSrc = 1;
-        contIf.memToReg = 0;
         contIf.dREN = 0;
         contIf.dWEN = 0;
         contIf.aluOp = ALU_ADD;
@@ -153,7 +151,6 @@
           contIf.lui = 1;
         end
         else if (instr[31:26] == LW) begin // I-type instruction
-          contIf.memToReg = 1;
           contIf.dREN = 1;
           contIf.WEN = 1; // preiously dhit
         end

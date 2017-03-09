@@ -20,7 +20,7 @@ interface pipe_reg_if;
 
 
   // Input/Outputs
-  logic   regDst, branch, WEN, aluSrc, jmp, jl, jmpReg, memToReg, dREN, dWEN, lui, bne, zeroExt, shiftSel;
+  logic   regDst, branch, WEN, aluSrc, jmp, jl, jmpReg, dREN, dWEN, lui, bne, zeroExt, shiftSel;
   logic	  [1:0] aluCont;
   aluop_t aluOp;
 
