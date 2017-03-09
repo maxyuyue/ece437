@@ -28,8 +28,8 @@ typedef struct packed {
   //dcache
   cache_entry [7:0] [1:0] dcache, dcacheNext; // 8 sets and 2 blocks per set
   logic [7:0] lru, lruNext, hitCount, hitCountNext;
-  typedef enum {IDLE, LOAD0, LOAD1, WRITE0, WRITE1, WB, FLUSH0, HALT} state_type;
-  typedef enum {READ0HIT, READ1HIT, READ0MISSEMPTY, READ1MISSEMPTY} debug;
+  typedef enum {IDLE, LOAD0, LOAD1, WRITE0, WRITE1, WB0, WB1, FLUSH0, HALT} state_type;
+  typedef enum {NA,READ0HIT, READ1HIT, READ0MISSEMPTY, READ1MISSEMPTY,WRITE0HIT,WRITE1HIT,WRITE0MISSEMPTY,WRITE1MISSEMPTY,READMISSFULL, WRITEMISSFULL} debug;
   state_type state, stateNext;
   debug debugState;
   //query initializations
@@ -57,7 +57,6 @@ typedef struct packed {
     cif.dREN = 0;
     cif.dWEN = 0;
 
-
     if (state == IDLE) begin
       if ((dcache[query.idx][0].tag == query.tag) && (dcache[query.idx][0].valid == 1) && (dcif.dmemREN == 1)) begin // hit loc 0 for read
         debugState = READ0HIT;
@@ -76,6 +75,7 @@ typedef struct packed {
         stateNext = IDLE; // ready for next request
       end
       else if ((dcache[query.idx][0].tag == query.tag) && (dcache[query.idx][0].valid == 1) && (dcif.dmemWEN == 1)) begin // hit loc 0 for write
+        debugState = WRITE0HIT;
         dcacheNext[query.idx][0].data[query.blkoff] = dcif.dmemstore;
         dcif.dhit = 1;
         lruNext[query.idx] = 1; // lru block now other block
@@ -84,6 +84,7 @@ typedef struct packed {
         stateNext = IDLE;
       end
       else if ((dcache[query.idx][1].tag == query.tag) && (dcache[query.idx][1].valid == 1) && (dcif.dmemWEN == 1)) begin // hit loc 1 for write
+        debugState = WRITE1HIT;
         dcacheNext[query.idx][1].data[query.blkoff] = dcif.dmemstore;
         dcif.dhit = 1;
         lruNext[query.idx] = 0; // lru block now other block
@@ -105,18 +106,36 @@ typedef struct packed {
         hitCountNext = hitCount - 1;
       end
       else if ((dcache[query.idx][0].tag != query.tag) && (dcache[query.idx][0].valid != 1) && (dcif.dmemWEN == 1)) begin // miss loc 0 for write. No prev data
-        stateNext = WRITE0;
+        debugState = WRITE0MISSEMPTY;
+        stateNext = LOAD0;
+        lruNext[query.idx] = 0; // ensure block 0 is the one that is used
         hitCountNext = hitCount - 1;
       end
-      else if ((dcache[query.idx][0].tag != query.tag) && (dcache[query.idx][0].valid != 1) && (dcif.dmemWEN == 1)) begin // miss loc 0 for write. No prev data
-        stateNext = WRITE1;
+      else if ((dcache[query.idx][1].tag != query.tag) && (dcache[query.idx][1].valid != 1) && (dcif.dmemWEN == 1)) begin // miss loc 0 for write. No prev data
+        debugState = WRITE1MISSEMPTY;
+        stateNext = LOAD0;
+       lruNext[query.idx] = 1; // ensure block 1 is the one that is used
         hitCountNext = hitCount - 1;
       end
+
+
+      else if ((dcache[query.idx][lruBlock].tag != query.tag) && (dcache[query.idx][lruBlock].valid == 1) && (dcif.dmemREN == 1)) begin // miss loc for read. Prev data
+        debugState = READMISSFULL;
+        stateNext = WB0;
+        hitCountNext = hitCount - 1;
+      end
+      else if ((dcache[query.idx][lruBlock].tag != query.tag) && (dcache[query.idx][lruBlock].valid == 1) && (dcif.dmemWEN == 1)) begin // miss loc for write. Prev data
+        debugState = WRITEMISSFULL;
+        stateNext = WB0;
+        hitCountNext = hitCount - 1;
+      end
+     
+
     end // end idle state
 
     else if (state == LOAD0) begin // load first word in block
       cif.daddr = {dcif.dmemaddr[31:3],3'b000};
-      cif.dREN = dcif.dmemREN;
+      cif.dREN = 1;
       if (cif.dwait == 1) begin
         stateNext = LOAD0;
       end
@@ -129,7 +148,7 @@ typedef struct packed {
 
     else if (state == LOAD1) begin // load second word in block
       cif.daddr = {dcif.dmemaddr[31:3],3'b100};
-      cif.dREN = dcif.dmemREN;
+      cif.dREN = 1;
       if (cif.dwait == 1) begin
         stateNext = LOAD1;
       end
@@ -143,22 +162,32 @@ typedef struct packed {
       end
     end
 
-    else if (state == WRITE0) begin
-      cif.daddr = dcif.dmemaddr;
-      cif.dWEN = dcif.dmemWEN;
+
+    else if (state == WB0) begin // load first word in block
+      cif.daddr = {dcache[query.idx][lruBlock].tag, query.idx, 3'b000};
+      cif.dstore = dcache[query.idx][lruBlock].data[0];
+      cif.dWEN = 1;
       if (cif.dwait == 1) begin
-        dcif.dhit = 0;
-        stateNext = WRITE0;
+        stateNext = WB0;
       end
       else begin
-        dcif.dhit = 1;
-        dcacheNext[query.idx][0].tag = query.tag;
-        dcacheNext[query.idx][0].data[query.blkoff] = cif.dload;
-        dcacheNext[query.idx][0].valid = 1;
-        dcacheNext[query.idx][0].dirty = 0;
+        stateNext = WB1; // now time to load second word in block
+      end
+    end
+
+    else if (state == WB1) begin // load second word in block
+      cif.daddr = {dcache[query.idx][lruBlock].tag, query.idx, 3'b100};
+      cif.dstore = dcache[query.idx][lruBlock].data[1];
+      cif.dWEN = 1;
+      if (cif.dwait == 1) begin
+        stateNext = WB1;
+      end
+      else begin
+        dcacheNext[query.idx][lruBlock].valid = 0; // make not valid so it will be overwritten
         stateNext = IDLE;
       end
-    end // end write0 state
+    end
+
 
     else begin
       stateNext = IDLE;

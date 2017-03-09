@@ -106,6 +106,7 @@ module dcache_tb;
     dcif.dmemaddr = 32'hBAD1BAD1; // done reading
     cif.dwait = 1; /// RAM now has second data value
     #(PERIOD)
+    #(PERIOD)
 
     // Read miss
     dcif.dmemREN = 1;
@@ -123,6 +124,8 @@ module dcache_tb;
     #(PERIOD)
     dcif.dmemREN = 0; // done reading
     dcif.dmemaddr = 32'hBAD1BAD1; // done reading
+    cif.dwait = 1; /// RAM now has second data value
+
     #(PERIOD)
 
 
@@ -130,11 +133,70 @@ module dcache_tb;
     #(PERIOD);
     dcif.dmemREN = 1;
     dcif.dmemaddr = 32'h1000000c;
-    //cif.dwait = 1; 
-//    cif.dload = 32'hBAD1BAD1;
-  //  dcif.dmemREN = 1;
-    //dcif.dmemaddr = 1234;
     #(PERIOD);
+    dcif.dmemREN = 0;
+
+    // Write hit
+    #(PERIOD);
+    dcif.dmemWEN = 1;
+    dcif.dmemaddr = 32'h11000008;
+    dcif.dmemstore = 32'h11110101;
+    #(PERIOD);
+    dcif.dmemWEN = 0;
+    dcif.dmemaddr = 32'hBAD1BAD1;
+    dcif.dmemstore = 32'hBAD1BAD1;
+
+    // Write miss
+    #(PERIOD);
+    dcif.dmemWEN = 1;
+    dcif.dmemaddr = 32'h11000111;
+    dcif.dmemstore = 32'h00011101;
+    #(PERIOD);
+    #(PERIOD);
+    cif.dwait = 0; // RAM now has first data value
+    cif.dload = 32'h12345678; // first read data
+    #(PERIOD)
+    cif.dwait = 1; // RAM reading second value
+    #(PERIOD)
+    cif.dwait = 0; /// RAM now has second data value
+    cif.dload = 32'hfedcba98; // second read data
+    #(PERIOD)
+    cif.dwait = 1; /// RAM now has second data value
+
+    #(PERIOD); // Done writing
+    dcif.dmemWEN = 0;
+    dcif.dmemaddr = 32'hBAD1BAD1;
+    dcif.dmemstore = 32'hBAD1BAD1;
+    #(PERIOD);
+    #(PERIOD);
+
+
+    // Read miss with replace
+    dcif.dmemREN = 1;
+    dcif.dmemaddr = 32'h11100008;
+    cif.dload = 32'hBAD1BAD1;
+    #(PERIOD);
+    #(PERIOD);
+    #(PERIOD);
+    #(PERIOD);
+    #(PERIOD);
+    #(PERIOD);
+    #(PERIOD);
+    cif.dwait = 0; // RAM now has first data value
+    cif.dload = 32'h10101010; // first read data
+    #(PERIOD)
+    cif.dwait = 1; // RAM reading second value
+    #(PERIOD)
+    cif.dwait = 0; /// RAM now has second data value
+    cif.dload = 32'h11001100; // second read data
+    #(PERIOD)
+    dcif.dmemREN = 0; // done reading
+    dcif.dmemaddr = 32'hBAD1BAD1; // done reading
+    cif.dwait = 1; /// RAM now has second data value
+
+    #(PERIOD);
+    #(PERIOD);
+
   end
 
   endprogram
