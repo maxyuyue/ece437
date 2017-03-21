@@ -59,18 +59,18 @@ assign query.tag = dcif.dmemaddr[31:6];
 assign query.idx = dcif.dmemaddr[5:3];
 assign query.blkoff = dcif.dmemaddr[2];
 assign query.bytoff = 2'b00;
-assign lruBlock = lru[query.idx];
+
 
 //Hit initializations
-assign isHit1 = (dcache[0][query.idx].tag == query.tag && dcache[0].valid == 1) ? 1 : 0;
-assign isHit2 = (dcache[1][query.idx].tag == query.tag && dcache[1].valid == 1) ? 1 : 0;
+assign isHit1 = (dcache[0][query.idx].tag == query.tag && dcache[0][query.idx].valid == 1) ? 1 : 0;
+assign isHit2 = (dcache[1][query.idx].tag == query.tag && dcache[1][query.idx].valid == 1) ? 1 : 0;
 
 always_ff @(posedge CLK, negedge nRST)
 	begin
     if(nRST == 1'b0) 
-      state = IDLE;
+      state <= IDLE;
     else
-      state = nxt_state;
+      state <= nxt_state;
  end
  
 
@@ -82,9 +82,10 @@ always_ff @(posedge CLK, negedge nRST)
     		count <= 0;
     		hitCount <= 0;
     		missCount <= 0;
-	      for(i = 0; i < 8; i++) 
+    		
+	      for(i = 0; i < 2; i++) 
 	      	begin
-	        	for (x = 0; x < 2; x++)
+	        	for (x = 0; x < 8; x++)
 	        		begin
 		          	dcache[i][x].tag <= '0;
 			          dcache[i][x].data[0] <= '0;
@@ -92,7 +93,11 @@ always_ff @(posedge CLK, negedge nRST)
 			          dcache[i][x].valid <= 0;
 			          dcache[i][x].dirty <= 0;
       	  		end
-        	lru[i] = '0;
+      		end
+
+      	for(i = 0; i < 8; i++)
+      		begin
+      			lru[i] = 0;
       		end
     	end
     else
@@ -224,7 +229,7 @@ always_comb
 					//Check for Halt --> If enabled, ignore everything
 					if(dcif.halt)
 						begin
-							nxt_state = FLUSH;
+							nxt_state = FLUSH0;
 						end
 
 				end
@@ -299,12 +304,12 @@ always_comb
 					if(count == 8)	//done flushing the whole cache
 						begin
 							nxt_state = FLUSH1;
-							nxt_count = 0';
+							nxt_count = '0;
 						end
 					else if(dcache[0][count].dirty)	//Write back this data to memory
 						begin
 							nxt_count = count;
-							nxt_state = WB0;
+							nxt_state = WB0_FLUSH0;
 						end
 					else
 						begin
@@ -349,7 +354,7 @@ always_comb
 					if(count == 8)	//done flushing the whole cache
 						begin
 							nxt_state = HALT;
-							nxt_count = 0';
+							nxt_count = '0;
 						end
 					else if(dcache[1][count].dirty)	//Write back this data to memory
 						begin
@@ -397,7 +402,7 @@ always_comb
 			HALT:
 				begin
 					cif.dWEN = 1;
-					cif.daddr = 0x3100;
+					cif.daddr = 32'h00003100;
 					cif.dstore = hitCount-missCount;
 					if(cif.dwait == 1)
 						begin
@@ -412,4 +417,5 @@ always_comb
 
 			default : /* default */;
 		endcase
-	end	
+	end
+	endmodule // dcache		
