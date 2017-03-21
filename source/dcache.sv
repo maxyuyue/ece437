@@ -28,7 +28,7 @@ typedef struct packed {
   logic lru_nxt;
   logic valid_nxt0, valid_nxt1;
   logic dirty_nxt0, dirty_nxt1;
-  logic[25:0] query_tag_nxt;
+  logic[25:0] query_tag_nxt0, query_tag_nxt1;
   word_t[1:0] data_nxt0, data_nxt1;
 
   //counter variable used in the flush state
@@ -101,14 +101,14 @@ always_ff @(posedge CLK, negedge nRST)
       	dcache[0][query.idx].data[1] <= data_nxt0[1];
       	dcache[0][query.idx].valid <= valid_nxt0;
       	dcache[0][query.idx].dirty <= dirty_nxt0;
-				dcache[0][query.idx].tag <= query_tag_nxt;
+				dcache[0][query.idx].tag <= query_tag_nxt0;
 
       	//Table1 assignments
       	dcache[1][query.idx].data[0] <= data_nxt1[0];
       	dcache[1][query.idx].data[1] <= data_nxt1[1];
       	dcache[1][query.idx].valid <= valid_nxt1;
       	dcache[1][query.idx].dirty <= dirty_nxt1;
-      	dcache[1][query.idx].tag <= query_tag_nxt;
+      	dcache[1][query.idx].tag <= query_tag_nxt1;
 
       	count <= nxt_count;
       	hitCount <= hitCount_nxt;
@@ -137,19 +137,19 @@ always_comb
     lru_nxt = lru[query.idx];
 
     // dcache update values
-    //query tage is same for both tables
-    query_tag_nxt = dcache[0][query.idx].tag;
     // Table0
     data_nxt0[0] = dcache[0][query.idx].data[0]
     data_nxt0[1] = dcache[0][query.idx].data[1];	
     valid_nxt0 = dcache[0][query.idx].valid;
     dirty_nxt0 = dcache[0][query.idx].dirty;
-
+    query_tag_nxt0 = dcache[0][query.idx].tag;	
+    
     // Table1
     data_nxt1[0] = dcache[1][query.idx].data[0]
     data_nxt1[1] = dcache[1][query.idx].data[1];	
     valid_nxt1 = dcache[1][query.idx].valid;
     dirty_nxt1 = dcache[1][query.idx].dirty;
+    query_tag_nxt1 = dcache[1][query.idx].tag;
 
     //counter variables for flush state
     nxt_count = count;
@@ -279,14 +279,14 @@ always_comb
 						begin
 							if(lru[query.idx])
 								begin
-									query_tag_nxt = query.tag
+									query_tag_nxt1 = query.tag
 									data_nxt1[1] = cif.dload;
 									valid_nxt1 = 1;
 									dirty_nxt1 = 0;			
 								end
 							else
 								begin
-									query_tag_nxt = query.tag
+									query_tag_nxt0 = query.tag
 									data_nxt0[1] = cif.dload;	
 									valid_nxt0 = 1;
 									dirty_nxt0 = 0;
@@ -361,12 +361,12 @@ always_comb
 				begin
 					if(lru[query.idx])
 						begin
-							query_tag_nxt = query.tag
+							query_tag_nxt1 = query.tag
 							dcache[1][query.idx].valid = 1
 						end
 					else
 						begin
-							query_tag_nxt = query.tag
+							query_tag_nxt0 = query.tag
 							dcache[0][query.idx].valid = 1
 						end
 					nxt_state = IDLE;
