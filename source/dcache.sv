@@ -38,17 +38,8 @@ typedef struct packed {
 cache_entry [1:0][7:0] dcache; //8 sets and 2 blocks per set
 logic[7:0] lru;
 
-typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM0, WRITETOMEM1, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, HALT} state_type;	
-/*State descriptions
-LOADTOCACHE0 - Read word one from memory in case of a miss
-LOADTOCACHE1 - Read word two from memory in case of a miss
-WRITETOMEM0 - Write word one to memory in case of a miss and dirty bit high
-WRITETOMEM1 - Write word two to memory in case of a miss and dirty bit high
-WB0 - Write back word one (done after halt is received)
-WB1 - Write back word two (done after halt is received)
-FLUSH0 - Flush registers after receiving halt
-HALT - Halt signal received
-*/
+typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM_INREAD0, WRITETOMEM_INREAD1, WRITETOMEM_INWRITE0, WRITETOMEM_INWRITE1, WRITETOCACHE, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, HALT} state_type;	
+
 
 state_type state, nxt_state;
 
@@ -179,7 +170,6 @@ always_comb
 								begin
 									dcif.dmemload = dcache[1][query.idx].data[query.blkoff]; // send value to datapath
 									dcif.dhit = 1;
-									tab_index = 1;
 									lru_nxt = 0; //Table 1 is now the least recently used
 									nxt_state = IDLE;
 									hitCount_nxt = hitCount + 1;
@@ -189,7 +179,7 @@ always_comb
 							//Miss case --> assign next state based on dirty bit of the least recently used table
 							else if(dcache[lru[query.idx]][query.idx].dirty == 1)		//Write to memory before reading
 								begin
-									nxt_state = WRITETOMEM0;
+									nxt_state = WRITETOMEM_INREAD0;
 									missCount_nxt = missCount+1;
 								end
 
@@ -225,13 +215,13 @@ always_comb
 							//Miss case --> assign next state based on dirty bit of the least recently used table
 							else if(dcache[lru[query.idx]][query.idx].dirty == 1)		//Write to memory before writing to cache
 								begin
-									nxt_state = WRITETOMEM0;
+									nxt_state = WRITETOMEM_INWRITE0;
 									missCount_nxt = missCount+1;
 								end
 
 							else
 								begin
-									nxt_state = LOADTOCACHE0;
+									nxt_state = WRITETOCACHE;
 									missCount_nxt = missCount+1;
 								end
 						end
@@ -295,35 +285,73 @@ always_comb
 						end
 				end
 
-			WRITETOMEM0:	//Write first word to memory in case block's dirty bit was set
+			WRITETOMEM_INREAD0:	//Write first word to memory in case block's dirty bit was set
 				begin
 					cif.dWEN = 1;
-					cif.daddr = {dcache[tab_index][query.idx].tag, query.idx, 3'b000};
-					cif.dstore = dcache[tab_index][query.idx].data[0];
+					cif.daddr = {dcache[lru[query.idx]][query.idx].tag, query.idx, 3'b000};
+					cif.dstore = dcache[lru[query.idx]][query.idx].data[0];
 					if(cif.dwait == 1)
 						begin
-							nxt_state = WRITETOMEM0;
+							nxt_state = WRITETOMEM_INREAD0;
 						end
 					else
 						begin
-							nxt_state = WRITETOMEM1;	//Write second word to memory
+							nxt_state = WRITETOMEM_INREAD1;	//Write second word to memory
 						end
 				end
 
-			WRITETOMEM1:
+			WRITETOMEM_INREAD1:
 				begin
 					cif.dWEN = 1;
-					cif.daddr = {dcache[tab_index][query.idx].tag, query.idx, 3'b100};
-					cif.dstore = dcache[tab_index][query.idx].data[1];
+					cif.daddr = {dcache[lru[query.idx]][query.idx].tag, query.idx, 3'b100};
+					cif.dstore = dcache[lru[query.idx]][query.idx].data[1];
 					if(cif.dwait == 1)
 						begin
-							nxt_state = WRITETOMEM1;
+							nxt_state = WRITETOMEM_INREAD1;
 						end
 					else
 						begin
 							nxt_state = LOADTOCACHE0;	//Write second word to memory
 						end
 				end
+
+			WRITETOMEM_INWRITE0:
+				begin
+					cif.dWEN = 1;
+					cif.daddr = {dcache[lru[query.idx]][query.idx].tag, query.idx, 3'b000};
+					cif.dstore = dcache[lru[query.idx]][query.idx].data[0];
+					if(cif.dwait == 1)
+						begin
+							nxt_state = WRITETOMEM_INWRITE0;
+						end
+					else
+						begin
+							nxt_state = WRITETOMEM_INWRITE1;	//Write second word to memory
+						end
+				end
+
+
+			WRITETOMEM_INWRITE1:
+				begin
+					cif.dWEN = 1;
+					cif.daddr = {dcache[lru[query.idx]][query.idx].tag, query.idx, 3'b100};
+					cif.dstore = dcache[lru[query.idx]][query.idx].data[1];
+					if(cif.dwait == 1)
+						begin
+							nxt_state = WRITETOMEM_INWRITE1;
+						end
+					else
+						begin
+							nxt_state = WRITETOCACHE;	//Write second word to memory
+						end
+				end	
+			
+
+			WRITETOCACHE:
+				begin
+					
+				end
+
 
 			FLUSH0:	//Flush table1 of the dcache
 				begin
