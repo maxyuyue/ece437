@@ -187,12 +187,12 @@ module datapath (
 
   assign dpif.imemREN = 1;
   assign dpif.dmemaddr = exmemValue.outputPort;
+  assign ihitEnable = (~exmemValue.dREN && ~exmemValue.dWEN) && dpif.ihit;  
   assign memwbEnable = ihitEnable | dpif.dhit;
   assign exmemFlush = ~ihitEnable & dpif.dhit;
   assign dpif.dmemREN = exmemValue.dREN; // instead of request unit
   assign dpif.dmemWEN = exmemValue.dWEN; // instead of request unit
   assign ifidEnable = ihitEnable & ~ifidFreze;
-  assign ihitEnable = (~dpif.dmemREN && ~dpif.dmemWEN) && dpif.ihit;
 
 
   /********** Program Counter Update **********/

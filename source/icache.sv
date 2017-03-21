@@ -65,6 +65,6 @@ typedef struct packed {
 
    assign cif.iREN = dcif.imemREN && ~dcif.ihit; //and not  ihit
    assign cif.iaddr = dcif.imemaddr;
-   assign dcif.imemload = cif.iload; 
+   assign dcif.imemload = icache[query.idx].data; 
 
   endmodule // icache

@@ -74,7 +74,7 @@ always_ff @(posedge CLK, negedge nRST)
     		count <= 0;
     		hitCount <= 0;
     		missCount <= 0;
-    		
+    		state <= IDLE;
 	      for(i = 0; i < 2; i++) 
 	      	begin
 	        	for (x = 0; x < 8; x++)
