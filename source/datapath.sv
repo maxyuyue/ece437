@@ -30,6 +30,8 @@ module datapath (
   funct_t func, funcif, funcid, funcex, funcmem, funcwb;
   logic memwbEnable, exmemFlush, stallPC, jumpBranch, ifidFlush, idexFlush, ifidFreze, ifidEnable, r1Fwd, r2Fwd;
 
+  logic ihitEnable;
+
   // Declared interfaces 
   control_if countIf(), countIfPC();
   register_file_if rfif();
@@ -40,7 +42,7 @@ module datapath (
 
   // Just used for debugging
   always_comb begin
-    if (dpif.ihit == 1) begin
+    if (ihitEnable == 1) begin
       opC = opcode_t'(dpif.imemload [31:26]);
       func = funct_t'(dpif.imemload[5:0]);
       opCif = opcode_t'(dpif.imemload [31:26]);
@@ -168,16 +170,16 @@ module datapath (
 
 
   // Pipelines
-  pipeRegIFID ifid(CLK, nRST, dpif.ihit, ifid_input, ifidValue, ifidEnable, ifidFlush);
-  pipeRegIDEX idex(CLK, nRST, dpif.ihit, idex_input, idexValue, dpif.ihit, idexFlush);
-  pipeRegEXMEM exmem(CLK, nRST, dpif.ihit, exmem_input, exmemValue, dpif.ihit, exmemFlush);
-  pipeRegMEMWB memwb(CLK, nRST, dpif.ihit, memwb_input, memwbValue, memwbValueOld, memwbEnable, 1'b0);
+  pipeRegIFID ifid(CLK, nRST, ihitEnable, ifid_input, ifidValue, ifidEnable, ifidFlush);
+  pipeRegIDEX idex(CLK, nRST, ihitEnable, idex_input, idexValue, ihitEnable, idexFlush);
+  pipeRegEXMEM exmem(CLK, nRST, ihitEnable, exmem_input, exmemValue, ihitEnable, exmemFlush);
+  pipeRegMEMWB memwb(CLK, nRST, ihitEnable, memwb_input, memwbValue, memwbValueOld, memwbEnable, 1'b0);
 
   // Datapath blocks
   register_file rf (CLK, nRST, rfif);
   programCounter progCount (pc, idexValue.pc, idexValue.instr, extendOut, idexValue.rdat1, aluf.zero, countIfPC, newPC, incPC, jumpBranch);
   alu_file alu(aluf);
-  control controler (ifidValue.instr, countIf, dpif.dhit, dpif.ihit);
+  control controler (ifidValue.instr, countIf, dpif.dhit, ihitEnable);
   
   hazard_unit hazard(countIf.dREN,jumpBranch, ifidValue.instr[25:21], ifidValue.instr[20:16], idexValue.dest, exmemValue.dest, stallPC, ifidFlush, idexFlush, ifidFreze);
   forwarding_unit forward(idexValue.instr[25:21], idexValue.instr[20:16], idexValue, exmemValue, memwbValue, memwbValueOld, rdat1Fwd, rdat2Fwd, r1Fwd, r2Fwd);
@@ -185,12 +187,12 @@ module datapath (
 
   assign dpif.imemREN = 1;
   assign dpif.dmemaddr = exmemValue.outputPort;
-  assign memwbEnable = dpif.ihit | dpif.dhit;
-  assign exmemFlush = ~dpif.ihit & dpif.dhit;
+  assign memwbEnable = ihitEnable | dpif.dhit;
+  assign exmemFlush = ~ihitEnable & dpif.dhit;
   assign dpif.dmemREN = exmemValue.dREN; // instead of request unit
   assign dpif.dmemWEN = exmemValue.dWEN; // instead of request unit
-  assign ifidEnable = dpif.ihit & ~ifidFreze;
-  
+  assign ifidEnable = ihitEnable & ~ifidFreze;
+  assign ihitEnable = (~dpif.dmemREN && ~dpif.dmemWEN) && dpif.ihit;
 
 
   /********** Program Counter Update **********/
@@ -200,7 +202,7 @@ module datapath (
         pc <= PC_INIT;
       end
       else begin  
-        if ((dpif.ihit == 1) && (stallPC == 0)) begin
+        if ((ihitEnable == 1) && (stallPC == 0)) begin
           pc <= newPC;        
         end
         else begin

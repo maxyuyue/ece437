@@ -138,14 +138,14 @@ always_comb
 
     // dcache update values
     // Table0
-    data_nxt0[0] = dcache[0][query.idx].data[0]
+    data_nxt0[0] = dcache[0][query.idx].data[0];
     data_nxt0[1] = dcache[0][query.idx].data[1];	
     valid_nxt0 = dcache[0][query.idx].valid;
     dirty_nxt0 = dcache[0][query.idx].dirty;
     query_tag_nxt0 = dcache[0][query.idx].tag;	
     
     // Table1
-    data_nxt1[0] = dcache[1][query.idx].data[0]
+    data_nxt1[0] = dcache[1][query.idx].data[0];
     data_nxt1[1] = dcache[1][query.idx].data[1];	
     valid_nxt1 = dcache[1][query.idx].valid;
     dirty_nxt1 = dcache[1][query.idx].dirty;
@@ -279,14 +279,14 @@ always_comb
 						begin
 							if(lru[query.idx])
 								begin
-									query_tag_nxt1 = query.tag
+									query_tag_nxt1 = query.tag;
 									data_nxt1[1] = cif.dload;
 									valid_nxt1 = 1;
 									dirty_nxt1 = 0;			
 								end
 							else
 								begin
-									query_tag_nxt0 = query.tag
+									query_tag_nxt0 = query.tag;
 									data_nxt0[1] = cif.dload;	
 									valid_nxt0 = 1;
 									dirty_nxt0 = 0;
@@ -361,13 +361,13 @@ always_comb
 				begin
 					if(lru[query.idx])
 						begin
-							query_tag_nxt1 = query.tag
-							dcache[1][query.idx].valid = 1
+							query_tag_nxt1 = query.tag;
+							valid_nxt1 = 1;
 						end
 					else
 						begin
-							query_tag_nxt0 = query.tag
-							dcache[0][query.idx].valid = 1
+							query_tag_nxt0 = query.tag;
+							valid_nxt0 = 1;
 						end
 					nxt_state = IDLE;
 				end
