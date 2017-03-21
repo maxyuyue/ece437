@@ -219,9 +219,9 @@ always_comb
 									missCount_nxt = missCount+1;
 								end
 
-							else
+							else	//simply change the data in cache
 								begin
-									nxt_state = WRITETOCACHE;
+									nxt_state = WRITETOCACHE;	//This state will change the tag of the block at query.idx, so that we get a hit
 									missCount_nxt = missCount+1;
 								end
 						end
@@ -349,7 +349,17 @@ always_comb
 
 			WRITETOCACHE:
 				begin
-					
+					if(lru[query.idx])
+						begin
+							dcache[1][query.idx].tag = query.tag
+							dcache[1][query.idx].valid = 1
+						end
+					else
+						begin
+							dcache[0][query.idx].tag = query.tag
+							dcache[0][query.idx].valid = 1
+						end
+					nxt_state = IDLE;
 				end
 
 
