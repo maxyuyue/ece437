@@ -177,7 +177,7 @@ module datapath (
 
   // Datapath blocks
   register_file rf (CLK, nRST, rfif);
-  programCounter progCount (pc, idexValue.pc, idexValue.instr, extendOut, idexValue.rdat1, aluf.zero, countIfPC, newPC, incPC, jumpBranch);
+  programCounter progCount (pc, idexValue.pc, idexValue.instr, extendOut, idexValue.rdat1, aluf.zero, countIfPC, newPC, incPC, jumpBranch, dpif);
   alu_file alu(aluf);
   control controler (ifidValue.instr, countIf, dpif.dhit, ihitEnable);
   

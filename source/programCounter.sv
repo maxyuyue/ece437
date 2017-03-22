@@ -19,7 +19,8 @@ module programCounter (
   input logic zero,
   control_if countIf,
   output word_t newPC, incPC, 
-  output logic jumpBranch
+  output logic jumpBranch,
+  datapath_cache_if.dp dpif
 
 );
   // import types
@@ -37,8 +38,11 @@ module programCounter (
 	  			branch = 1;
 	  		end
 	  		else begin // no branch
-	  			mux1Out = incPC;
-	  			branch = 0;
+	  			if (dpif.imemload != 32'hffffffff) // prevents pc incrementing if done with prog and no jump possible
+		  			mux1Out = incPC;
+		  		else
+		  			mux1Out = pc;
+		  		branch = 0;
 	  		end
 	  	end
 	  	else begin // Not a bne instruction
@@ -47,8 +51,11 @@ module programCounter (
 	  			branch = 1;
 	  		end
 	  		else begin // no branch
-	  			mux1Out = incPC;
-	  			branch = 0;
+	  			if (dpif.imemload != 32'hffffffff) // prevents pc incrementing if done with prog and no jump possible
+		  			mux1Out = incPC;
+		  		else
+		  			mux1Out = pc;
+		  		branch = 0;
 	  		end
 	  	end
 	end
