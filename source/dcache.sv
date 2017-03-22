@@ -111,8 +111,10 @@ always_ff @(posedge CLK, negedge nRST)
       	dcache[1][query.idx].tag <= query_tag_nxt1;
 
       	count <= nxt_count;
-      	hitCount <= hitCount_nxt;
-      	missCount <= missCount_nxt;
+    	if (dcif.halt == 0) begin // if prog isn't done
+	      	hitCount <= hitCount_nxt;
+	      	missCount <= missCount_nxt;
+    	end
       	state <= nxt_state;
     	end
  	end
