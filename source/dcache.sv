@@ -41,7 +41,7 @@ typedef struct packed {
 cache_entry [1:0][7:0] dcache; //8 sets and 2 blocks per set
 logic[7:0] lru;
 
-typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM_INREAD0, WRITETOMEM_INREAD1, WRITETOMEM_INWRITE0, WRITETOMEM_INWRITE1, WRITETOCACHE, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, HALT} state_type;	
+typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM_INREAD0, WRITETOMEM_INREAD1, WRITETOMEM_INWRITE0, WRITETOMEM_INWRITE1, WRITETOCACHE, WRITEONELOADWORD, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, HALT} state_type;	
 
 
 state_type state, nxt_state;
@@ -57,13 +57,13 @@ assign query.bytoff = 2'b00;
 assign isHit1 = (dcache[0][query.idx].tag == query.tag && dcache[0][query.idx].valid == 1) ? 1 : 0;
 assign isHit2 = (dcache[1][query.idx].tag == query.tag && dcache[1][query.idx].valid == 1) ? 1 : 0;
 
-always_ff @(posedge CLK, negedge nRST)
-	begin
-    if(nRST == 1'b0) 
-      state <= IDLE;
-    else
-      state <= nxt_state;
- end
+// always_ff @(posedge CLK, negedge nRST)
+// 	begin
+//     if(nRST == 1'b0) 
+//       state <= IDLE;
+//     else
+//       state <= nxt_state;
+//  end
  
 
 integer i, x;
@@ -113,6 +113,7 @@ always_ff @(posedge CLK, negedge nRST)
       	count <= nxt_count;
       	hitCount <= hitCount_nxt;
       	missCount <= missCount_nxt;
+      	state <= nxt_state;
     	end
  	end
 
@@ -206,7 +207,9 @@ always_comb
 									dcif.dhit = 1;
 									lru_nxt = 1; //Table 2 is now the least recently used
 									hitCount_nxt = hitCount + 1;
-									data_nxt0[query.blkoff] = dcif.dmemstore;;
+									data_nxt0[query.blkoff] = dcif.dmemstore;
+									dirty_nxt0 = 1;
+									valid_nxt0 = 1;
 									nxt_state = IDLE;
 								end
 
@@ -216,7 +219,9 @@ always_comb
 									dcif.dhit = 1;
 									lru_nxt = 1; //Table 2 is now the least recently used
 									hitCount_nxt = hitCount + 1;
-									data_nxt1[query.blkoff] = dcif.dmemstore;;
+									data_nxt1[query.blkoff] = dcif.dmemstore;
+									dirty_nxt1 = 1;
+									valid_nxt1 = 1;
 									nxt_state = IDLE;
 								end
 
@@ -295,6 +300,7 @@ always_comb
 						end
 				end
 
+
 			WRITETOMEM_INREAD0:	//Write first word to memory in case block's dirty bit was set
 				begin
 					cif.dWEN = 1;
@@ -369,7 +375,38 @@ always_comb
 							query_tag_nxt0 = query.tag;
 							valid_nxt0 = 1;
 						end
-					nxt_state = IDLE;
+					nxt_state = WRITEONELOADWORD;
+				end
+
+
+			WRITEONELOADWORD:
+				begin
+					cif.dREN = 1;
+					if(query.blkoff)
+						begin
+							cif.daddr = {dcif.dmemaddr[31:3], 3'b000};
+						end
+					else
+						begin
+							cif.daddr = {dcif.dmemaddr[31:3], 3'b100};
+						end
+
+					if(cif.dwait == 1)
+						begin
+							nxt_state = WRITEONELOADWORD;
+						end
+					else
+						begin
+							if(lru[query.idx])
+								begin
+									data_nxt1[~query.blkoff] = cif.dload;	
+								end
+							else
+								begin
+									data_nxt0[~query.blkoff] = cif.dload;	
+								end
+							nxt_state = IDLE;
+						end
 				end
 
 
@@ -388,7 +425,7 @@ always_comb
 					else
 						begin
 							nxt_count = count + 1;
-							nxt_state = state;
+							nxt_state = FLUSH0;
 						end
 				end	
 
@@ -438,7 +475,7 @@ always_comb
 					else
 						begin
 							nxt_count = count + 1;
-							nxt_state = state;
+							nxt_state = FLUSH1;
 						end
 				end
 			
