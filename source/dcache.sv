@@ -41,7 +41,7 @@ typedef struct packed {
 cache_entry [1:0][7:0] dcache; //8 sets and 2 blocks per set
 logic[7:0] lru;
 
-typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM_INREAD0, WRITETOMEM_INREAD1, WRITETOMEM_INWRITE0, WRITETOMEM_INWRITE1, WRITETOCACHE, WRITEONELOADWORD, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, HALT} state_type;	
+typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM_INREAD0, WRITETOMEM_INREAD1, WRITETOMEM_INWRITE0, WRITETOMEM_INWRITE1, WRITETOCACHE, WRITEONELOADWORD, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, END, HALT} state_type;	
 
 
 state_type state, nxt_state;
@@ -101,7 +101,7 @@ always_ff @(posedge CLK, negedge nRST)
       	dcache[0][query.idx].data[1] <= data_nxt0[1];
       	dcache[0][query.idx].valid <= valid_nxt0;
       	dcache[0][query.idx].dirty <= dirty_nxt0;
-				dcache[0][query.idx].tag <= query_tag_nxt0;
+		dcache[0][query.idx].tag <= query_tag_nxt0;
 
       	//Table1 assignments
       	dcache[1][query.idx].data[0] <= data_nxt1[0];
@@ -417,7 +417,7 @@ always_comb
 							nxt_state = FLUSH1;
 							nxt_count = '0;
 						end
-					else if(dcache[0][count].dirty)	//Write back this data to memory
+					else if(dcache[0][count[2:0]].dirty)	//Write back this data to memory
 						begin
 							nxt_count = count;
 							nxt_state = WB0_FLUSH0;
@@ -432,8 +432,8 @@ always_comb
 			WB0_FLUSH0:
 				begin
 					cif.dWEN = 1;
-					cif.daddr = {dcache[0][count].tag, query.idx, 3'b000};
-					cif.dstore = dcache[0][query.idx].data[0];
+					cif.daddr = {dcache[0][count[2:0]].tag, count[2:0], 3'b000};
+					cif.dstore = dcache[0][count[2:0]].data[0];
 					if(cif.dwait == 1)
 						begin
 							nxt_state = WB0_FLUSH0;
@@ -447,8 +447,8 @@ always_comb
 		  WB1_FLUSH0:
 		  	begin
 					cif.dWEN = 1;
-					cif.daddr = {dcache[0][count].tag, query.idx, 3'b100};
-					cif.dstore = dcache[0][query.idx].data[1];
+					cif.daddr = {dcache[0][count[2:0]].tag, count[2:0], 3'b100};
+					cif.dstore = dcache[0][count[2:0]].data[1];
 					if(cif.dwait == 1)
 						begin
 							nxt_state = WB1_FLUSH0;
@@ -467,7 +467,7 @@ always_comb
 							nxt_state = HALT;
 							nxt_count = '0;
 						end
-					else if(dcache[1][count].dirty)	//Write back this data to memory
+					else if(dcache[1][count[2:0]].dirty)	//Write back this data to memory
 						begin
 							nxt_count = count;
 							nxt_state = WB0_FLUSH1;
@@ -482,8 +482,8 @@ always_comb
 			WB0_FLUSH1:
 				begin
 					cif.dWEN = 1;
-					cif.daddr = {dcache[1][count].tag, query.idx, 3'b000};
-					cif.dstore = dcache[1][query.idx].data[0];
+					cif.daddr = {dcache[1][count[2:0]].tag, count[2:0], 3'b000};
+					cif.dstore = dcache[1][count[2:0]].data[0];
 					if(cif.dwait == 1)
 						begin
 							nxt_state = WB0_FLUSH1;
@@ -497,8 +497,8 @@ always_comb
 		  WB1_FLUSH1:
 		  	begin
 					cif.dWEN = 1;
-					cif.daddr = {dcache[1][count].tag, query.idx, 3'b100};
-					cif.dstore = dcache[1][query.idx].data[1];
+					cif.daddr = {dcache[1][count[2:0]].tag, count[2:0], 3'b100};
+					cif.dstore = dcache[1][count[2:0]].data[1];
 					if(cif.dwait == 1)
 						begin
 							nxt_state = WB1_FLUSH1;
@@ -520,12 +520,16 @@ always_comb
 							nxt_state = HALT;
 						end
 					else
-						begin
-							nxt_state = HALT;
-							dcif.flushed = 1;	
+						begin		
+							nxt_state = END;
 						end
 				end	
 
+			END:
+				begin
+					dcif.flushed = 1;	
+					nxt_state = END;
+				end
 			default : /* default */;
 		endcase
 	end
