@@ -172,7 +172,8 @@ always_comb
 									dcif.dmemload = dcache[0][query.idx].data[query.blkoff]; // send value to datapath
 									dcif.dhit = 1;
 									lru_nxt = 1; //Table 2 is now the least recently used
-									hitCount_nxt = hitCount + 1;
+									if (dcif.halt == 0)
+    									hitCount_nxt = hitCount + 1;
 									nxt_state = IDLE;
 								end
 
@@ -183,7 +184,8 @@ always_comb
 									dcif.dhit = 1;
 									lru_nxt = 0; //Table 1 is now the least recently used
 									nxt_state = IDLE;
-									hitCount_nxt = hitCount + 1;
+									if (dcif.halt == 0)
+    									hitCount_nxt = hitCount + 1;
 								end
 
 							
@@ -191,13 +193,15 @@ always_comb
 							else if(dcache[lru[query.idx]][query.idx].dirty == 1)		//Write to memory before reading
 								begin
 									nxt_state = WRITETOMEM_INREAD0;
-									missCount_nxt = missCount+1;
+									if (dcif.halt == 0)
+    									missCount_nxt = missCount + 1;
 								end
 
 							else
 								begin
 									nxt_state = LOADTOCACHE0;
-									missCount_nxt = missCount+1;
+									if (dcif.halt == 0)
+    									missCount_nxt = missCount + 1;
 								end
 						end
 
@@ -208,7 +212,8 @@ always_comb
 								begin
 									dcif.dhit = 1;
 									lru_nxt = 1; //Table 2 is now the least recently used
-									hitCount_nxt = hitCount + 1;
+									if (dcif.halt == 0)
+    									hitCount_nxt = hitCount + 1;
 									data_nxt0[query.blkoff] = dcif.dmemstore;
 									dirty_nxt0 = 1;
 									valid_nxt0 = 1;
@@ -220,7 +225,8 @@ always_comb
 								begin
 									dcif.dhit = 1;
 									lru_nxt = 1; //Table 2 is now the least recently used
-									hitCount_nxt = hitCount + 1;
+									if (dcif.halt == 0)
+    									hitCount_nxt = hitCount + 1;
 									data_nxt1[query.blkoff] = dcif.dmemstore;
 									dirty_nxt1 = 1;
 									valid_nxt1 = 1;
@@ -231,13 +237,15 @@ always_comb
 							else if(dcache[lru[query.idx]][query.idx].dirty == 1)		//Write to memory before writing to cache
 								begin
 									nxt_state = WRITETOMEM_INWRITE0;
-									missCount_nxt = missCount+1;
+									if (dcif.halt == 0)
+    									missCount_nxt = missCount + 1;
 								end
 
 							else	//simply change the data in cache
 								begin
 									nxt_state = WRITETOCACHE;	//This state will change the tag of the block at query.idx, so that we get a hit
-									missCount_nxt = missCount+1;
+									if (dcif.halt == 0)
+    									missCount_nxt = missCount + 1;
 								end
 						end
 
