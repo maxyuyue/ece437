@@ -19,9 +19,7 @@ module programCounter (
   input logic zero,
   control_if countIf,
   output word_t newPC, incPC, 
-  output logic jumpBranch,
-  datapath_cache_if.dp dpif
-
+  output logic jumpBranch
 );
   // import types
   import cpu_types_pkg::*;
@@ -38,7 +36,7 @@ module programCounter (
 	  			branch = 1;
 	  		end
 	  		else begin // no branch
-	  			if (dpif.imemload != 32'hffffffff) // prevents pc incrementing if done with prog and no jump possible
+	  			if (imemload != 32'hffffffff) // prevents pc incrementing if done with prog and no jump possible
 		  			mux1Out = incPC;
 		  		else
 		  			mux1Out = pc;
@@ -51,7 +49,7 @@ module programCounter (
 	  			branch = 1;
 	  		end
 	  		else begin // no branch
-	  			if (dpif.imemload != 32'hffffffff) // prevents pc incrementing if done with prog and no jump possible
+	  			if (imemload != 32'hffffffff) // prevents pc incrementing if done with prog and no jump possible
 		  			mux1Out = incPC;
 		  		else
 		  			mux1Out = pc;
