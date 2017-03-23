@@ -292,8 +292,6 @@ module datapath (
       dpif.halt = 1;
     end
   end
-  //assign dpif.halt = (exmemValue.instr == 32'hffffffff) ? 1 : 0;
-
 
   /********** Halt Signal **********/
 
