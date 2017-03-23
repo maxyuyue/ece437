@@ -189,13 +189,15 @@ always_comb
 							else if(dcache[lru[query.idx]][query.idx].dirty == 1)		//Write to memory before reading
 								begin
 									nxt_state = WRITETOMEM_INREAD0;
-									missCount_nxt = missCount+1;
+									//missCount_nxt = missCount+1;
+									hitCount_nxt = hitCount - 1;
 								end
 
 							else
 								begin
 									nxt_state = LOADTOCACHE0;
-									missCount_nxt = missCount+1;
+									//missCount_nxt = missCount+1;
+									hitCount_nxt = hitCount - 1;
 								end
 						end
 
@@ -229,13 +231,15 @@ always_comb
 							else if(dcache[lru[query.idx]][query.idx].dirty == 1)		//Write to memory before writing to cache
 								begin
 									nxt_state = WRITETOMEM_INWRITE0;
-									missCount_nxt = missCount+1;
+									//missCount_nxt = missCount+1;
+									hitCount_nxt = hitCount - 1;
 								end
 
 							else	//simply change the data in cache
 								begin
 									nxt_state = WRITETOCACHE;	//This state will change the tag of the block at query.idx, so that we get a hit
-									missCount_nxt = missCount+1;
+									//missCount_nxt = missCount+1;
+									hitCount_nxt = hitCount - 1;
 								end
 						end
 
@@ -514,7 +518,7 @@ always_comb
 				begin
 					cif.dWEN = 1;
 					cif.daddr = 32'h00003100;
-					cif.dstore = hitCount-missCount;
+					cif.dstore = hitCount;
 					if(cif.dwait == 1)
 						begin
 							nxt_state = HALT;
