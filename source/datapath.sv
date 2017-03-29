@@ -202,7 +202,7 @@ module datapath (
         pc <= PC_INIT;
       end
       else begin  
-        if ((ihitEnable == 1) && (stallPC == 0) && (~dpif.halt)) begin
+        if ((ihitEnable == 1) && (stallPC == 0)) begin
           pc <= newPC;        
         end
         else begin
@@ -288,11 +288,10 @@ module datapath (
     if (nRST == 0) begin
       dpif.halt = 0;
     end
-    else if (exmemValue.instr == 32'hffffffff) begin
+    else if (memwbValue.instr == 32'hffffffff) begin
       dpif.halt = 1;
     end
   end
-
   /********** Halt Signal **********/
 
 endmodule
