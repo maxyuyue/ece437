@@ -12,7 +12,7 @@
 // memory types
 `include "cpu_types_pkg.vh"
 
-module memory_control (
+module coherence_controller (
   input CLK, nRST,
   cache_control_if.cc ccif
 );
@@ -21,6 +21,8 @@ module memory_control (
 
   // number of cpus for cc
   parameter CPUS = 2;
+
+typedef enum {IDLE, WRITE_M0, WRITE_M1, SNOOP, LOAD0, LOAD1, WRITE0, WRITE1, INSTR}state_type;   
 
   /*
     ccif.iwait: 1 when no instruction to load and/or not access busy, 0 otherwise ->
@@ -51,62 +53,291 @@ module memory_control (
 
   */
 
-  always_comb // determine wait signals sent to cache
-  begin
-    if (ccif.ramstate == ACCESS) begin
-      if (ccif.dREN == 1'b1) begin // data ready to be read
-        ccif.iwait = 1'b1;
-        ccif.dwait = 1'b0;
-      end
-      else if (ccif.dWEN == 1'b1) begin // data ready to be written
-        ccif.iwait = 1'b1;
-        ccif.dwait = 1'b0;
-      end
-      else if (ccif.iREN == 1'b1) begin // instruction ready to be read
-        ccif.iwait = 1'b0;
-        ccif.dwait = 1'b1;
-      end
-      else begin //default is data is not ready
-        ccif.iwait = 1'b1;
-        ccif.dwait = 1'b1;
-      end
-      end
+logic[1:0] ccinv, nxt_ccinv;
+logic[1:0] ccwait, nxt_ccwait;
+word_t[1:0] snoopaddr, nxt_snoopaddr;
+logic lru, nlru; //used to service the least recently used icache
+logic i, nxt_i; //index of i cache to be serviced
+
+
+always_comb // determine wait signals sent to cache
+begin
+  if (ccif.ramstate == ACCESS) begin
+    if (ccif.dREN == 1'b1) begin // data ready to be read
+      ccif.iwait = 1'b1;
+      ccif.dwait = 1'b0;
+    end
+    else if (ccif.dWEN == 1'b1) begin // data ready to be written
+      ccif.iwait = 1'b1;
+      ccif.dwait = 1'b0;
+    end
+    else if (ccif.iREN == 1'b1) begin // instruction ready to be read
+      ccif.iwait = 1'b0;
+      ccif.dwait = 1'b1;
+    end
     else begin //default is data is not ready
       ccif.iwait = 1'b1;
       ccif.dwait = 1'b1;
     end
+    end
+  else begin //default is data is not ready
+    ccif.iwait = 1'b1;
+    ccif.dwait = 1'b1;
+  end
+end
+
+
+always_ff @(posedge CLK or negedge nRST)
+  begin
+    if(~nRST)
+      begin
+        state <= IDLE;
+        ccinv[0] <= 0;
+        ccinv[1] <= 0;
+        snoopaddr[0] <= '0;
+        snoopaddr[1] <= '0;
+        ccwait[0] <= 0;
+        ccwait[1] <= 0;
+        serviced <= 0;
+        lru <= 0;
+        i <= 0;
+      end 
+    else
+     begin
+      state <= nxt_state;
+      ccinv[0] <= nxt_ccinv[0];
+      ccinv[1] <= nxt_ccinv[1];
+      snoopaddr[0] <= nxt_snoopaddr[0];
+      snoopaddr[1] <= nxt_snoopaddr[1];
+      ccwait[0] <= nxt_ccwait[0];
+      ccwait[1] <= nxt_ccwait[1];
+      serviced <= nxt_serviced;
+      lru <= nlru;
+      i <= nxt_i;
+    end
+end
+
+
+always_comb
+  begin
+    ccif.ramstore = '0;
+    ccif.ramaddr = '0;
+    ccif.ramWEN = 0;
+    ccif.ramREN = 0;
+
+    ccif.dload[0] = ccif.ramload;
+    ccif.iload[0] = ccif.ramload;
+    ccif.dload[1] = ccif.ramload;
+    ccif.iload[1] = ccif.ramload;
+
+    nxt_ccwait[0] = ccwait[0];
+    nxt_ccwait[1] = ccwait[1];
+    nxt_ccinv[0] = ccinv[0];
+    nxt_ccinv[1] = ccinv[1];
+    nxt_snoopaddr[0] = snoopaddr[0];
+    nxt_snoopaddr[1] = snoopaddr[1];
+
+    nxt_serviced = serviced;
+    nlru = lru;
+    nxt_i = i;
+
+    case (state)
+      IDLE:
+        begin
+          if(ccif.dWEN[0])
+            begin
+              nxt_state = WRITE_M0;
+              nxt_serviced = 0;
+            end
+
+          else if(ccif.cctrans[0])
+            begin
+              nxt_ccwait[1] = 1;
+              nxt_serviced = 0;
+              nxt_snoopaddr[1] = ccif.daddr[0]; 
+              nxt_state = SNOOP;
+            end 
+
+          else if(ccif.dWEN[1])
+            begin
+              nxt_state = WRITE_M0;
+              nxt_serviced = 1;
+            end
+
+          else if(ccif.cctrans[1])
+            begin
+              nxt_ccwait[0] = 1;
+              nxt_serviced = 1;
+              nxt_snoopaddr[0] = ccif.daddr[1]; 
+              nxt_state = SNOOP;
+            end
+
+          else if(ccif.iREN[0] || ccif.iREN[1])
+            begin
+              if(ccif.iREN[0] && ccif.iREN[1])
+                begin
+                  nlru = ~lru;
+                  nxt_i = lru;
+                end
+              else
+                begin
+                  nlru = (ccif.iREN[0] == 1) ? 1 : 0;
+                  nxt_i = (ccif.iREN[0] == 1) ? 0 : 1;
+                end
+              nxt_state = INSTR;
+            end
+
+          else
+            begin
+              nxt_state = IDLE;
+            end
+
+        end
+
+      WRITE_M0:
+        begin
+          ccif.ramWEN = 1;
+          ccif.ramstore = ccif.dstore[serviced];
+          ccif.ramaddr = ccif.daddr[serviced];
+          if(ccif.ramstate != ACCESS)
+            begin
+              nxt_state = WRITE_M0;
+            end
+          else
+            begin
+              nxt_state = WRITE_M1;
+            end
+        end
+
+
+      WRITE_M1:
+        begin
+          ccif.ramWEN = 1;
+          ccif.ramstore = ccif.dstore[serviced];
+          ccif.ramaddr = ccif.daddr[serviced];
+          if(ccif.ramstate != ACCESS)
+            begin
+              nxt_state = WRITE_M1;
+            end
+          else
+            begin
+              nxt_state = IDLE;
+            end
+        end
+
+      SNOOP:
+        begin
+          if(ccif.cctrans[~serviced])
+            begin
+              if(~ccif.ccwrite[~serviced])
+                begin
+                  nxt_state = LOAD0;
+                  if(ccif.cctrans[serviced] && ccif.ccwrite[serviced])
+                    begin
+                      nxt_ccinv[~serviced] = 1;                  
+                    end
+                end
+              else if(ccif.ccwrite[~serviced])
+                begin
+                  nxt_state = WRITE0;
+                  if(ccif.cctrans[serviced] && ccif.ccwrite[serviced])
+                    begin
+                      nxt_ccinv[~serviced] = 1;                  
+                    end
+                end
+              else
+                begin
+                  nxt_state = SNOOP;
+                end
+            end
+
+          else
+            begin
+              nxt_state = SNOOP;
+            end
+        end
+
+      LOAD0:
+        begin
+          ccif.ramREN = 1;
+          ccif.ramaddr = ccif.daddr[serviced];
+          if(ccif.ramstate != ACCESS)
+            begin
+              nxt_state = LOAD0;
+            end
+          else
+            begin
+              nxt_state = LOAD1;
+            end
+        end
+
+      LOAD1:
+        begin
+          ccif.ramREN = 1;
+          ccif.ramaddr = ccif.daddr[serviced];
+          if(ccif.ramstate != ACCESS)
+            begin
+              nxt_state = LOAD1;
+            end
+          else
+            begin
+              nxt_state = IDLE;
+            end
+        end
+
+      WRITE0:
+        begin
+          ccif.ramWEN = 1;
+          ccif.ramstore = ccif.dstore[~serviced];
+          ccif.ramaddr = ccif.daddr[~serviced];
+          if(ccif.ramstate != ACCESS)
+            begin
+              nxt_state = WRITE0;
+            end
+          else
+            begin
+              nxt_state = WRITE1;
+            end
+        end
+
+      WRITE1:
+        begin
+          ccif.ramWEN = 1;
+          ccif.ramstore = ccif.dstore[~serviced];
+          ccif.ramaddr = ccif.daddr[~serviced];
+          if(ccif.ramstate != ACCESS)
+            begin
+              nxt_state = WRITE1;
+            end
+          else
+            begin
+              nxt_state = IDLE;
+            end
+        end 
+
+      INSTR:
+        begin
+          ccif.ramREN = 1;
+          ccif.ramaddr = ccif.iaddr[i];
+          if(ccif.ramstate != ACCESS)
+            begin
+              nxt_state = INSTR;
+            end
+          else
+            begin
+              nxt_state = IDLE;
+            end
+        end
+    
+      default : /* default */;
+    endcase
   end
 
+  assign ccif.ccwait[0] = ccwait[0];
+  assign ccif.ccwait[1] = ccwait[1];
+  assign ccif.ccinv[0] = ccinv[0];
+  assign ccif.ccinv[1] = ccinv[1];
+  assign ccif.ccsnoopaddr[0] = snoopaddr[0];
+  assign ccif.ccsnoopaddr[1] = snoopaddr[1];
 
-
-  always_comb begin // determine RAM signals
-    
-    if (ccif.dREN == 1'b1) begin // ready to read data from RAM
-      ccif.ramWEN = 1'b0;
-      ccif.ramREN = 1'b1;
-      ccif.ramaddr = ccif.daddr; 
-    end
-    else if (ccif.dWEN == 1'b1) begin // ready to write data to RAM
-      ccif.ramWEN = 1'b1;
-      ccif.ramREN = 1'b0;
-      ccif.ramaddr = ccif.daddr;
-    end
-    else if (ccif.iREN == 1'b1) begin // ready to read instruction from RAM
-      ccif.ramWEN = 1'b0;
-      ccif.ramREN = 1'b1;
-      ccif.ramaddr = ccif.iaddr;
-    end
-    else begin // default don't access memory
-      ccif.ramWEN = 1'b0;
-      ccif.ramREN = 1'b0;
-      ccif.ramaddr = 32'hBAD1BAD1;
-    end
-
-    ccif.dload = ccif.ramload;
-    ccif.iload = ccif.ramload;
-    ccif.ramstore = ccif.dstore; // Data to store
-  
-    
-  end
-
-endmodule
+endmodule // coherence_controller 
