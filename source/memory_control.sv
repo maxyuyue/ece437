@@ -12,7 +12,7 @@
 // memory types
 `include "cpu_types_pkg.vh"
 
-module coherence_controller (
+module memory_control (
   input CLK, nRST,
   cache_control_if.cc ccif
 );
@@ -23,7 +23,7 @@ module coherence_controller (
   parameter CPUS = 2;
 
 typedef enum {IDLE, WRITE_M0, WRITE_M1, SNOOP, LOAD0, LOAD1, WRITE0, WRITE1, INSTR}state_type;   
-
+state_type state, nxt_state;
   /*
     ccif.iwait: 1 when no instruction to load and/or not access busy, 0 otherwise ->
     ccif.dwait: 1 when no data to load/write and/or not access busy, 0 otherwise ->
@@ -56,6 +56,7 @@ typedef enum {IDLE, WRITE_M0, WRITE_M1, SNOOP, LOAD0, LOAD1, WRITE0, WRITE1, INS
 logic[1:0] ccinv, nxt_ccinv;
 logic[1:0] ccwait, nxt_ccwait;
 word_t[1:0] snoopaddr, nxt_snoopaddr;
+logic serviced, nxt_serviced;
 logic lru, nlru; //used to service the least recently used icache
 logic i, nxt_i; //index of i cache to be serviced
 
