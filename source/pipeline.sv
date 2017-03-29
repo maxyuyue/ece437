@@ -18,15 +18,12 @@ parameter PC0 = 0;
   // bus interface
   datapath_cache_if         dcif ();
   // coherence interface
-  caches_if                 cif0();
-  // cif1 will not be used, but ccif expects it as an input
-  caches_if                 cif1();
-  cache_control_if    #(.CPUS(1))       ccif (cif0, cif1);
+  cache_control_if          ccif ();
 
   // map datapath
   datapath #(.PC_INIT(PC0)) DP (CLK, nRST, dcif);
   // map caches
-  caches                    CM (CLK, nRST, dcif, cif0);
+  caches #(.CPUID(0))       CM (CLK, nRST, dcif, ccif);
   // map coherence
   memory_control            CC (CLK, nRST, ccif);
 

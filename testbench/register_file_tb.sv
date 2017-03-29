@@ -1,8 +1,6 @@
 /*
-  Kyle Rakos
-  krakos@purdue.edu
-
-  register_file_tb.sv
+  Eric Villasenor
+  evillase@gmail.com
 
   register file test bench
 */
@@ -30,11 +28,11 @@ module register_file_tb;
   // interface
   register_file_if rfif ();
   // test program
-  test PROG (CLK,rfif,nRST);
+  test PROG ();
   // DUT
-  `ifndef MAPPED
+`ifndef MAPPED
   register_file DUT(CLK, nRST, rfif);
-  `else
+`else
   register_file DUT(
     .\rfif.rdat2 (rfif.rdat2),
     .\rfif.rdat1 (rfif.rdat1),
@@ -45,93 +43,10 @@ module register_file_tb;
     .\rfif.WEN (rfif.WEN),
     .\nRST (nRST),
     .\CLK (CLK)
-    );
-  `endif
+  );
+`endif
 
 endmodule
 
-program test (
-  input logic  CLK,
-  register_file_if.rf rfif,
-  output logic nRST
-  );
-    parameter PERIOD = 10;
-
-    initial begin
-    // Initialization
-    nRST = 0;
-    rfif.wsel = 5'h00;
-    rfif.wdat = 32'h00000000;
-    rfif.WEN = 0;
-    rfif.rsel1 = 5'h0;
-    rfif.rsel2 = 5'h0; 
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
-
-    // Write value to reg 1
-    nRST = 1;
-    rfif.wsel = 5'h01;
-    rfif.wdat = 32'hfedcba98;
-    rfif.WEN = 1;
-    rfif.rsel1 = 5'h0;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
-
-    // Write value to reg 31
-    nRST = 1;
-    rfif.wsel = 5'd31;
-    rfif.wdat = 32'h89abcdef;
-    rfif.WEN = 1;
-    rfif.rsel1 = 5'h0;
-    rfif.rsel2 = 5'd31;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
-
-
-  // Write value to reg 25 without write enable
-    nRST = 1;
-    rfif.wsel = 5'd25;
-    rfif.wdat = 32'hbbbbbbbb;
-    rfif.WEN = 0;
-    rfif.rsel1 = 5'd25;
-    rfif.rsel2 = 5'd31;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
-
-    // Write value to reg 25 with write enable
-    nRST = 1;
-    rfif.wsel = 5'd25;
-    rfif.wdat = 32'hbbbbbbbb;
-    rfif.WEN = 1;
-    rfif.rsel1 = 5'd25;
-    rfif.rsel2 = 5'd31;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
-
-    // Write value to reg 24 without initially showing it
-    nRST = 1;
-    rfif.wsel = 5'd24;
-    rfif.wdat = 32'hcccccccc;
-    rfif.WEN = 1;
-    rfif.rsel1 = 5'd25;
-    rfif.rsel2 = 5'd31;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
-
-  // Show reg 24
-     nRST = 1;
-    rfif.wsel = 5'd24;
-    rfif.wdat = 32'h00000000;
-    rfif.WEN = 0;
-    rfif.rsel1 = 5'd24;
-    rfif.rsel2 = 5'd31;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
-
-  // Reset
-    nRST = 0;
-    rfif.wsel = 5'd00;
-    rfif.wdat = 32'haaaaaaaa;
-    rfif.WEN = 0;
-    rfif.rsel1 = 5'd24;
-    rfif.rsel2 = 5'd31;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
-
-
-    end
-
-
+program test;
 endprogram

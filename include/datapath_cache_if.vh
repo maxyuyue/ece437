@@ -19,7 +19,7 @@ interface datapath_cache_if;
   logic               halt;
 
 // Icache signals
-  // hit and enable imemREN = iren (in lab)
+  // hit and enable
   logic               ihit, imemREN;
   // instruction addr
   word_t             imemload, imemaddr;

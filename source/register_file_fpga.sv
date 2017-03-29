@@ -3,7 +3,6 @@
   evillase@gmail.com
 
   register file fpga wrapper
-  register_file_fpga.sv
 */
 
 // interface
