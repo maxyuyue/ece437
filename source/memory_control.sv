@@ -41,6 +41,14 @@ module memory_control (
     ccif.ramstore: Data to write (32) ->
     ccif.ramload: Data returned from RAM (32) <-
 
+    // coherence
+      CPUS = number of cpus parameter passed from system -> cc
+      ccwait         : lets a cache know it needs to block cpu
+      ccinv          : let a cache know it needs to invalidate entry
+      ccwrite        : high if cache is doing a write of addr
+      ccsnoopaddr    : the addr being sent to other cache with either (wb/inv)
+      cctrans        : high if the cache state is transitioning (i.e. I->S, I->M, etc...)
+
   */
 
   always_comb // determine wait signals sent to cache

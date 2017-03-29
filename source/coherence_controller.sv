@@ -22,7 +22,7 @@ module coherence_controller (
   // number of cpus for cc
   parameter CPUS = 2;
 
-typedef enum {IDLE, WRITE_M0, WRITE_M1, SNOOP, LOAD0, LOAD1, WRITE0, WRITE1} state_type;  
+typedef enum {IDLE, WRITE_M0, WRITE_M1, SNOOP, LOAD0, LOAD1, WRITE0, WRITE1, INSTR} state_type;  
 state_type state, nxt_state;
   /*
     ccif.iwait: 1 when no instruction to load and/or not access busy, 0 otherwise ->
@@ -54,9 +54,10 @@ state_type state, nxt_state;
   */
 
 logic[1:0] ccinv, nxt_ccinv;
-logic[1:0] ccwait;
+logic[1:0] ccwait, nxt_ccwait;
 word_t[1:0] snoopaddr, nxt_snoopaddr;
-
+logic lru, nlru; //used to service the least recently used icache
+logic i, nxt_i; //index of i cache to be serviced
 
 always_ff @(posedge CLK or negedge nRST)
   begin
@@ -67,7 +68,11 @@ always_ff @(posedge CLK or negedge nRST)
         ccinv[1] <= 0;
         snoopaddr[0] <= '0;
         snoopaddr[1] <= '0;
+        ccwait[0] <= 0;
+        ccwait[1] <= 0;
         serviced <= 0;
+        lru <= 0;
+        i <= 0;
       end 
     else
      begin
@@ -76,7 +81,11 @@ always_ff @(posedge CLK or negedge nRST)
       ccinv[1] <= nxt_ccinv[1];
       snoopaddr[0] <= nxt_snoopaddr[0];
       snoopaddr[1] <= nxt_snoopaddr[1];
+      ccwait[0] <= nxt_ccwait[0];
+      ccwait[1] <= nxt_ccwait[1];
       serviced <= nxt_serviced;
+      lru <= nlru;
+      i <= nxt_i;
     end
 end
 
@@ -88,14 +97,16 @@ always_comb
     ccif.ramWEN = 0;
     ccif.ramREN = 0;
 
-    ccwait[0] = 0;
-    ccwait[1] = 0;
+    nxt_ccwait[0] = ccwait[0];
+    nxt_ccwait[1] = ccwait[1];
     nxt_ccinv[0] = ccinv[0];
     nxt_ccinv[1] = ccinv[1];
     nxt_snoopaddr[0] = snoopaddr[0];
     nxt_snoopaddr[1] = snoopaddr[1];
 
     nxt_serviced = serviced;
+    nlru = lru;
+    nxt_i = i;
 
     case (state)
       IDLE:
@@ -114,13 +125,29 @@ always_comb
             begin
               ccwait[1] = 1;
               nxt_serviced = 0;
+              nxt_snoopaddr[1] = ccif.daddr[0]; //doubts here??????
               nxt_state = SNOOP;
             end
           else if(ccif.cctrans[1])
             begin
               ccwait[0] = 1;
               nxt_serviced = 1;
+              nxt_snoopaddr[0] = ccif.daddr[1]; //doubts here??????
               nxt_state = SNOOP;
+            end
+          else if(ccif.iREN[0] || ccif.iREN[1])
+            begin
+              if(ccif.iREN[0] && ccif.iREN[1])
+                begin
+                  nlru = ~lru;
+                  nxt_i = lru;
+                end
+              else
+                begin
+                  nlru = (ccif.iREN[0] == 1) ? 1 : 0;
+                  nxt_i = (ccif.iREN[0] == 1) ? 0 : 1;
+                end
+              nxt_state = INSTR;
             end
           else
             begin
@@ -161,14 +188,17 @@ always_comb
 
       SNOOP:
         begin
-          nxt_snoopaddr[~serviced] = ccif.daddr[serviced]; //doubts here??????
           if(~ccif.ccwrite[~serviced])
             begin
               nxt_state = LOAD0;
             end
           else if(ccif.ccwrite[~serviced])
             begin
-              nxt_state = LOAD1;
+              nxt_state = WRITE0;
+            end
+          else
+            begin
+              nxt_state = SNOOP;
             end
         end
 
@@ -230,10 +260,27 @@ always_comb
           else
             begin
               ccif.dload[serviced] = ccif.dstore[~serviced];
-              nxt_ccinv[~serviced] = 1;
               nxt_state = IDLE;
+              if(ccif.cctrans[serviced] && ccif.ccwrite[serviced])
+                begin
+                  nxt_ccinv[~serviced] = 1;                  
+                end
             end
         end 
+
+      INSTR:
+        begin
+          ccif.ramREN = 1;
+          ccif.ramaddr = ccif.iaddr[i];
+          if(ccif.ramstate != ACCESS)
+            begin
+              nxt_state = INSTR;
+            end
+          else
+            begin
+              nxt_state = IDLE;
+            end
+        end
     
       default : /* default */;
     endcase
