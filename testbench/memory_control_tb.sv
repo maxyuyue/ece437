@@ -108,18 +108,18 @@ program test (
     cif0.iREN = 1'b0;
     cif0.dREN = 1'b0;
     cif0.dWEN = 1'b0;
-    cif0.dstore = 32'h01234567;
-    cif0.iaddr = 32'hfedcba98;
-    cif0.daddr = 32'h10101010;
+    cif0.dstore = 32'hBAD1BAD1;
+    cif0.iaddr = 32'hBAD1BAD1;
+    cif0.daddr = 32'hBAD1BAD1;
     cif0.cctrans = 1'b0;
     cif0.ccwrite = 1'b0;
     
     cif1.iREN = 1'b0;
     cif1.dREN = 1'b0;
     cif1.dWEN = 1'b0;
-    cif1.dstore = 32'h01234567;
-    cif1.iaddr = 32'hfedcba98;
-    cif1.daddr = 32'h10101010;
+    cif1.dstore = 32'hBAD1BAD1;
+    cif1.iaddr = 32'hBAD1BAD1;
+    cif1.daddr = 32'hBAD1BAD1;
     cif1.cctrans = 1'b0;
     cif1.ccwrite = 1'b0;
 
@@ -142,9 +142,9 @@ program test (
     // Check these inputs from RAM
       //ccif.ramstate
       //ccif.ramload   
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
+    @(posedge CLK); @(posedge CLK);
     
-    testType = "Read first instruction from core 0";
+    testType = "Read single instr from core 0";
     nRST = 1;
     cif0.iREN = 1'b1;
     cif0.dREN = 1'b0;
@@ -154,10 +154,18 @@ program test (
     cif0.daddr = 32'hBAD1BAD1;
     cif0.cctrans = 1'b0;
     cif0.ccwrite = 1'b0;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
+    @(posedge CLK); @(posedge CLK); 
     
-    testType = "Read first instruction from core 1";
-    nRST = 1;
+    testType = "Read single instr from core 1";
+    cif0.iREN = 1'b0;
+    cif0.dREN = 1'b0;
+    cif0.dWEN = 1'b0;
+    cif0.dstore = 32'hBAD1BAD1;
+    cif0.iaddr = 32'hBAD1BAD1;
+    cif0.daddr = 32'hBAD1BAD1;
+    cif0.cctrans = 1'b0;
+    cif0.ccwrite = 1'b0;
+
     cif1.iREN = 1'b1;
     cif1.dREN = 1'b0;
     cif1.dWEN = 1'b0;
@@ -166,10 +174,39 @@ program test (
     cif1.daddr = 32'hBAD1BAD1;
     cif1.cctrans = 1'b0;
     cif1.ccwrite = 1'b0;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
+    @(posedge CLK); @(posedge CLK); 
+
+
+    testType = "Read single instr from both cores";
+    nRST = 1;
+    cif0.iREN = 1'b1;
+    cif0.dREN = 1'b0;
+    cif0.dWEN = 1'b0;
+    cif0.dstore = 32'hBAD1BAD1;
+    cif0.iaddr = 32'h0000008;
+    cif0.daddr = 32'hBAD1BAD1;
+    cif0.cctrans = 1'b0;
+    cif0.ccwrite = 1'b0;
+    cif1.iREN = 1'b1;
+    cif1.dREN = 1'b0;
+    cif1.dWEN = 1'b0;
+    cif1.dstore = 32'hBAD1BAD1;
+    cif1.iaddr = 32'h0000000C;
+    cif1.daddr = 32'hBAD1BAD1;
+    cif1.cctrans = 1'b0;
+    cif1.ccwrite = 1'b0;
+    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
 
     testType = "Read data from core 0";
-    nRST = 1;
+    cif1.iREN = 1'b0;
+    cif1.dREN = 1'b0;
+    cif1.dWEN = 1'b0;
+    cif1.dstore = 32'hBAD1BAD1;
+    cif1.iaddr = 32'hBAD1BAD1;
+    cif1.daddr = 32'hBAD1BAD1;
+    cif1.cctrans = 1'b0;
+    cif1.ccwrite = 1'b0;
+
     cif0.iREN = 1'b0;
     cif0.dREN = 1'b1;
     cif0.dWEN = 1'b0;
@@ -187,21 +224,13 @@ program test (
     cif0.dWEN = 1'b1;
     cif0.dstore = 32'h1234567;
     cif0.iaddr = 32'hBAD1BAD1;
-    cif0.daddr = 32'h000000F0;
+    cif0.daddr = 32'h000000FC;
     cif0.cctrans = 1'b1; // transition from Invalid to Shared
     cif0.ccwrite = 1'b1;
     @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
 
-    testType = "Read data from core 0";
-    nRST = 1;
-    cif0.iREN = 1'b1;
-    cif0.dREN = 1'b1;
-    cif0.dWEN = 1'b0;
-    cif0.dstore = 32'hBAD1BAD1;
-    cif0.iaddr = 32'h11111111;
-    cif0.daddr = 32'h000000F0;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
 
+    testType = "Dump Memory";
     dump_memory();
    
     end
