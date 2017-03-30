@@ -99,7 +99,9 @@ program test (
   cache_control_if.cc cfif,
   output logic nRST
   );
+    import cpu_types_pkg::*;
     parameter PERIOD = 10;
+    ramstate_t ramState = ACCESS;
     string testType = "Initialization";
 
     initial begin
@@ -148,13 +150,13 @@ program test (
     testType = "Read instr from core 0";
     cif0.iREN = 1'b1;
     cif0.iaddr = 32'h00000000;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); 
+    @(posedge ccif.ramREN); @(posedge CLK);
     
     reset();
     testType = "Read instr from core 1";
     cif1.iREN = 1'b1;
     cif1.iaddr = 32'h00000004;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
+    @(posedge ccif.ramREN); @(posedge CLK); @(posedge CLK);
 
     reset();
     testType = "1st read instr from both cores";
@@ -175,19 +177,42 @@ program test (
     @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
 
     reset();
-    testType = "Read data from core 0 and core 1";
+    testType = "Read data from core 0";
     cif0.dREN = 1'b1;
     cif0.daddr = 32'h000000F0;
     cif0.cctrans = 1'b1; // transition  from Invalid to Shared
+    @(posedge CLK); 
+    cif1.cctrans = 1'b1; // let know that cache 1 doesn't have value
+    @(posedge CLK); 
+    cif1.cctrans = 1'b0;
+    @(posedge CLK); @(posedge CLK); @(posedge CLK); 
+    
+    reset();
+    testType = "Read data from core 1";
     cif1.dREN = 1'b1;
-    cif1.daddr = 32'h000000F0;
+    cif1.daddr = 32'h000000F4;
     cif1.cctrans = 1'b1; // transition  from Invalid to Shared
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); 
+    @(posedge CLK); 
+    cif0.cctrans = 1'b1; // let know that cache 0 doesn't have value
+    @(posedge CLK);
+    cif0.cctrans = 1'b0;
+    @(posedge CLK);  @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); 
+ 
 
-
+    reset();
+    testType = "Write data from core 0";
+    cif0.dWEN = 1'b1;
+    cif0.daddr = 32'h000000FC;
+    cif0.dstore = 32'h12345678;
+    cif0.cctrans = 1'b1; // transition  from Invalid to Shared
+    @(posedge CLK); 
+    cif1.cctrans = 1'b1; // let know that cache 1 doesn't have value
+    @(posedge CLK); 
+    cif1.cctrans = 1'b0;
+    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK)
 
     testType = "Dump Memory";
-    dump_memory();
+    //dump_memory();
    
     end
 task automatic dump_memory();
