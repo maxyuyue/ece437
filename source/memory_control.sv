@@ -61,33 +61,6 @@ logic lru, nlru; //used to service the least recently used icache
 logic i, nxt_i; //index of i cache to be serviced
 
 
-always_comb // determine wait signals sent to cache
-begin
-  if (ccif.ramstate == ACCESS) begin
-    if (ccif.dREN == 1'b1) begin // data ready to be read
-      ccif.iwait = 1'b1;
-      ccif.dwait = 1'b0;
-    end
-    else if (ccif.dWEN == 1'b1) begin // data ready to be written
-      ccif.iwait = 1'b1;
-      ccif.dwait = 1'b0;
-    end
-    else if (ccif.iREN == 1'b1) begin // instruction ready to be read
-      ccif.iwait = 1'b0;
-      ccif.dwait = 1'b1;
-    end
-    else begin //default is data is not ready
-      ccif.iwait = 1'b1;
-      ccif.dwait = 1'b1;
-    end
-    end
-  else begin //default is data is not ready
-    ccif.iwait = 1'b1;
-    ccif.dwait = 1'b1;
-  end
-end
-
-
 always_ff @(posedge CLK or negedge nRST)
   begin
     if(~nRST)
@@ -130,6 +103,11 @@ always_comb
     ccif.iload[0] = ccif.ramload;
     ccif.dload[1] = ccif.ramload;
     ccif.iload[1] = ccif.ramload;
+
+    ccif.iwait[0] = 1;
+    ccif.iwait[1] = 1;
+    ccif.dwait[0] = 1;    
+    ccif.dwait[1] = 1;
 
     nxt_ccwait[0] = ccwait[0];
     nxt_ccwait[1] = ccwait[1];
@@ -206,6 +184,7 @@ always_comb
             end
           else
             begin
+              ccif.dwait[serviced] = 0;
               nxt_state = WRITE_M1;
             end
         end
@@ -222,6 +201,7 @@ always_comb
             end
           else
             begin
+              ccif.dwait[serviced] = 0;
               nxt_state = IDLE;
             end
         end
@@ -268,6 +248,7 @@ always_comb
             end
           else
             begin
+              ccif.dwait[serviced] = 0;
               nxt_state = LOAD1;
             end
         end
@@ -282,6 +263,7 @@ always_comb
             end
           else
             begin
+              ccif.dwait[serviced] = 0;
               nxt_state = IDLE;
             end
         end
@@ -297,6 +279,7 @@ always_comb
             end
           else
             begin
+              ccif.dwait[serviced] = 0;
               nxt_state = WRITE1;
             end
         end
@@ -312,6 +295,7 @@ always_comb
             end
           else
             begin
+              ccif.dwait[serviced] = 0;
               nxt_state = IDLE;
             end
         end 
@@ -326,6 +310,7 @@ always_comb
             end
           else
             begin
+              ccif.iwait[i] = 0;
               nxt_state = IDLE;
             end
         end
