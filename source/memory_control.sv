@@ -123,7 +123,7 @@ always_comb
     case (state)
       IDLE:
         begin
-          if(ccif.dWEN[0])
+          if(ccif.dWEN[0] && ~ccif.cctrans[0])
             begin
               nxt_state = WRITE_M0;
               nxt_serviced = 0;
@@ -137,7 +137,7 @@ always_comb
               nxt_state = SNOOP;
             end 
 
-          else if(ccif.dWEN[1])
+          else if(ccif.dWEN[1] && ~ccif.cctrans[1])
             begin
               nxt_state = WRITE_M0;
               nxt_serviced = 1;
