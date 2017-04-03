@@ -207,11 +207,17 @@ always_comb begin
 						if(isHit1) begin
 							dcif.dhit = 1;
 							lru_nxt = 1; //Table 2 is now the least recently used
-							if (dcif.halt == 0)
-								hitCount_nxt = hitCount + 1;
 							data_nxt0[query.blkoff] = dcif.dmemstore;
 							dirty_nxt0 = 1;
 							valid_nxt0 = 1;
+							if (~dcache[0][query.idx].dirty) begin // if in shared state move to modified
+								ccwrite_nxt = 1'b1;
+								cctrans_nxt = 1'b1;
+							end
+							else begin
+								ccwrite_nxt = 1'b0;
+								cctrans_nxt = 1'b0;
+							end
 							nxt_state = IDLE;
 						end
 
@@ -219,19 +225,24 @@ always_comb begin
 						else if(isHit2) begin
 							dcif.dhit = 1;
 							lru_nxt = 1; //Table 2 is now the least recently used
-							if (dcif.halt == 0)
-								hitCount_nxt = hitCount + 1;
 							data_nxt1[query.blkoff] = dcif.dmemstore;
 							dirty_nxt1 = 1;
 							valid_nxt1 = 1;
+							if (~dcache[1][query.idx].dirty) begin // if in shared state move to modified
+								ccwrite_nxt = 1'b1;
+								cctrans_nxt = 1'b1;
+							end
+							else begin
+								ccwrite_nxt = 1'b0;
+								cctrans_nxt = 1'b0;
+							end
 							nxt_state = IDLE;
 						end
 
 						//Miss case --> assign next state based on dirty bit of the least recently used table
 						else if(dcache[lru[query.idx]][query.idx].dirty == 1) begin		//Write to memory before writing to cache
 							nxt_state = WRITETOMEM_INWRITE0;
-							if (dcif.halt == 0)
-								missCount_nxt = missCount + 1;
+
 						end
 
 						else begin//simply change the data in cache
