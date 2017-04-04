@@ -123,7 +123,7 @@ always_comb
     case (state)
       IDLE:
         begin
-          if(ccif.dWEN[0] && ~ccif.cctrans[0])
+          if(ccif.dWEN[0] && ~ccif.cctrans[0]) // 
             begin
               nxt_state = WRITE_M0;
               nxt_serviced = 0;
@@ -132,6 +132,7 @@ always_comb
           else if(ccif.cctrans[0])
             begin
               nxt_ccwait[1] = 1;
+              nxt_ccwait[0] = 0; // TODO: Make sure this is correct
               nxt_serviced = 0;
               nxt_snoopaddr[1] = ccif.daddr[0]; 
               nxt_state = SNOOP;
@@ -145,6 +146,7 @@ always_comb
 
           else if(ccif.cctrans[1])
             begin
+              nxt_ccwait[1] = 0; // TODO: Make sure this is correct
               nxt_ccwait[0] = 1;
               nxt_serviced = 1;
               nxt_snoopaddr[0] = ccif.daddr[1]; 
@@ -208,34 +210,26 @@ always_comb
 
       SNOOP:
         begin
-          if(ccif.cctrans[~serviced])
-            begin
-              if(~ccif.ccwrite[~serviced])
-                begin
-                  nxt_state = LOAD0;
-                  if(ccif.cctrans[serviced] && ccif.ccwrite[serviced])
-                    begin
-                      nxt_ccinv[~serviced] = 1;                  
-                    end
-                end
-              else if(ccif.ccwrite[~serviced])
-                begin
-                  nxt_state = WRITE0;
-                  if(ccif.cctrans[serviced] && ccif.ccwrite[serviced])
-                    begin
-                      nxt_ccinv[~serviced] = 1;                  
-                    end
-                end
-              else
-                begin
-                  nxt_state = SNOOP;
-                end
+          if(ccif.cctrans[~serviced]) begin // if nonserviced cache is transfering
+            if(~ccif.ccwrite[~serviced]) begin // if nonservice write is 0
+              nxt_state = LOAD0;
+              if(ccif.cctrans[serviced] && ccif.ccwrite[serviced]) begin // if serviced cache is transfering and writing
+                nxt_ccinv[~serviced] = 1; // invalidate nonservice cache
+              end
             end
-
-          else
-            begin
+            else if(ccif.ccwrite[~serviced]) begin // if nonservice cache is writing
+              nxt_state = WRITE0;
+              if(ccif.cctrans[serviced] && ccif.ccwrite[serviced]) begin
+                nxt_ccinv[~serviced] = 1;                  
+              end
+            end
+            else begin
               nxt_state = SNOOP;
             end
+          end
+          else begin
+              nxt_state = SNOOP;
+          end
         end
 
       LOAD0:

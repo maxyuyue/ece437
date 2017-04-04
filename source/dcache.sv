@@ -57,6 +57,7 @@ always_ff @(posedge CLK, negedge nRST) begin
 		cif.cctrans <= 1'b0;
 		cif.ccwrite <= 1'b0;
 		read <= 1'b0;
+		count <= 0;
 	  	for(i = 0; i < 2; i++) begin
     		for (x = 0; x < 8; x++) begin
 				dcache[i][x].tag <= '0;
@@ -90,6 +91,7 @@ always_ff @(posedge CLK, negedge nRST) begin
     	read <= read_nxt;
 		cif.cctrans <= cctrans_nxt;
 		cif.ccwrite <= ccwrite_nxt;
+		count <= nxt_count;
     end
  end
 
@@ -456,6 +458,11 @@ always_comb begin
 						ccwrite_nxt = 1'b0;
 						cctrans_nxt = 1'b1;
 					end
+
+					if (cif.ccinv) begin// invalidate cache entry
+						valid_nxt0 = 1'b0;
+						valid_nxt1 = 1'b0;
+					end
 				end
 
 			END:
@@ -463,7 +470,6 @@ always_comb begin
 					dcif.flushed = 1;	
 					nxt_state = END;
 				end
-
 
 			default : /* default */;
 		endcase
