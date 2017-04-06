@@ -246,6 +246,7 @@ always_comb
           else
             begin
               ccif.dwait[serviced] = 0;
+              ccif.dload[serviced] = ccif.ramload;
               nxt_state = LOAD1;
             end
         end
@@ -261,6 +262,7 @@ always_comb
           else
             begin
               ccif.dwait[serviced] = 0;
+              ccif.dload[serviced] = ccif.ramload;
               nxt_state = IDLE;
             end
         end
@@ -277,6 +279,7 @@ always_comb
           else
             begin
               ccif.dwait[serviced] = 0;
+              ccif.dload[serviced] = ccif.dstore[~serviced];
               nxt_state = WRITE1;
             end
         end
@@ -293,6 +296,7 @@ always_comb
           else
             begin
               ccif.dwait[serviced] = 0;
+              ccif.dload[serviced] = ccif.dstore[~serviced];
               nxt_state = IDLE;
             end
         end 

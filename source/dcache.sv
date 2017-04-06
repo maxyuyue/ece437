@@ -22,7 +22,7 @@ typedef struct packed {
 } cache_entry;
 
 //Values used to update cache in always_ff block
-logic lru_nxt, valid_nxt0, valid_nxt1, dirty_nxt0, dirty_nxt1;
+logic lru_nxt, valid_nxt0, valid_nxt1, dirty_nxt0, dirty_nxt1, snoop_valid_nxt0, snoop_valid_nxt1;
 logic[25:0] query_tag_nxt0, query_tag_nxt1;
 word_t[1:0] data_nxt0, data_nxt1;
 logic cctrans_nxt, ccwrite_nxt, read, read_nxt;
@@ -87,6 +87,7 @@ always_ff @(posedge CLK, negedge nRST) begin
       	dcache[0][query.idx].valid <= valid_nxt0;
       	dcache[0][query.idx].dirty <= dirty_nxt0;
 		dcache[0][query.idx].tag <= query_tag_nxt0;
+		dcache[0][snoop.idx].valid <= snoop_valid_nxt0;
 
       	//Table1 assignments
       	dcache[1][query.idx].data[0] <= data_nxt1[0];
@@ -94,6 +95,7 @@ always_ff @(posedge CLK, negedge nRST) begin
       	dcache[1][query.idx].valid <= valid_nxt1;
       	dcache[1][query.idx].dirty <= dirty_nxt1;
       	dcache[1][query.idx].tag <= query_tag_nxt1;
+		dcache[1][snoop.idx].valid <= snoop_valid_nxt1;
 
       	state <= nxt_state;
     	read <= read_nxt;
@@ -129,13 +131,15 @@ always_comb begin
     valid_nxt0 = dcache[0][query.idx].valid;
     dirty_nxt0 = dcache[0][query.idx].dirty;
     query_tag_nxt0 = dcache[0][query.idx].tag;	
-    
+    snoop_valid_nxt0 = dcache[0][snoop.idx].valid;
+
     // Table1
     data_nxt1[0] = dcache[1][query.idx].data[0];
     data_nxt1[1] = dcache[1][query.idx].data[1];	
     valid_nxt1 = dcache[1][query.idx].valid;
     dirty_nxt1 = dcache[1][query.idx].dirty;
     query_tag_nxt1 = dcache[1][query.idx].tag;
+    snoop_valid_nxt1 = dcache[1][snoop.idx].valid;
 
     //counter variables for flush state
     nxt_count = count;
@@ -208,7 +212,7 @@ always_comb begin
 
 						else if(isHit1) begin // hit in cache 1 for write
 							dcif.dhit = 1;
-							lru_nxt = 1; // Cache 1 is now the least recently used
+							lru_nxt = 0; // Cache 0 is now the least recently used
 							data_nxt1[query.blkoff] = dcif.dmemstore;
 							dirty_nxt1 = 1;
 							valid_nxt1 = 1;
@@ -233,7 +237,7 @@ always_comb begin
 						else begin // Simply change the data in cache
 							cctrans_nxt = 1'b1;
 							ccwrite_nxt = 1'b1;
-							nxt_state = WRITEONELOADWORD0;	//This state will change the tag of the block at query.idx, so that we get a hit
+							nxt_state = WRITEONELOADWORD0;	
 						end
 					end
 					else if(dcif.halt) begin
@@ -285,9 +289,7 @@ always_comb begin
 							valid_nxt0 = 1;
 							dirty_nxt0 = 0;
 						end
-						cctrans_nxt = 0;
-						ccwrite_nxt = 0;
-						nxt_state = IDLE; //Load second word
+						nxt_state = IDLE; 
 					end
 				end
 
@@ -481,7 +483,7 @@ always_comb begin
 						nxt_state = SNOOP;
 
 					// If dchache[0/1][snoopTag] == snoopaddrTag and Valid then snoop hit
-					if () begin
+					if (isSnoopHit0 || isSnoopHit1) begin
 						ccwrite_nxt = 1'b1;
 						cctrans_nxt = 1'b1;
 					end
@@ -490,9 +492,9 @@ always_comb begin
 						cctrans_nxt = 1'b1;
 					end
 
-					if (cif.ccinv) begin// invalidate cache entry
-						valid_nxt0 = 1'b0;
-						valid_nxt1 = 1'b0;
+					if (cif.ccinv) begin// invalidate cache entry for snoop address 
+						snoop_valid_nxt0 = 1'b0;
+						snoop_valid_nxt1 = 1'b0;
 					end
 				end
 
