@@ -35,7 +35,7 @@ dcachef_t query, snoop;
 // Other signals
 logic[3:0] count, nxt_count;//counter variable used in the flush state
 logic isHit0, isHit1, isSnoopHit0, isSnoopHit1;
-typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM0, WRITETOMEM1, WRITEONELOADWORD0, WRITEONELOADWORD1, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, END, SNOOP} state_type;	
+typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM0, WRITETOMEM1, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, END, SNOOP} state_type;	
 state_type state, nxt_state;
 
 
@@ -87,7 +87,7 @@ always_ff @(posedge CLK, negedge nRST) begin
       	dcache[0][query.idx].valid <= valid_nxt0;
       	dcache[0][query.idx].dirty <= dirty_nxt0;
 		dcache[0][query.idx].tag <= query_tag_nxt0;
-		dcache[0][snoop.idx].valid <= snoop_valid_nxt0;
+		//dcache[0][snoop.idx].valid <= snoop_valid_nxt0;
 
       	//Table1 assignments
       	dcache[1][query.idx].data[0] <= data_nxt1[0];
@@ -95,7 +95,7 @@ always_ff @(posedge CLK, negedge nRST) begin
       	dcache[1][query.idx].valid <= valid_nxt1;
       	dcache[1][query.idx].dirty <= dirty_nxt1;
       	dcache[1][query.idx].tag <= query_tag_nxt1;
-		dcache[1][snoop.idx].valid <= snoop_valid_nxt1;
+		//dcache[1][snoop.idx].valid <= snoop_valid_nxt1;
 
       	state <= nxt_state;
     	read <= read_nxt;
@@ -236,8 +236,8 @@ always_comb begin
 
 						else begin // Simply change the data in cache
 							cctrans_nxt = 1'b1;
-							ccwrite_nxt = 1'b1;
-							nxt_state = WRITEONELOADWORD0;	
+							ccwrite_nxt = 1'b0;
+							nxt_state = LOADTOCACHE0;	
 						end
 					end
 					else if(dcif.halt) begin
@@ -322,7 +322,7 @@ always_comb begin
 							nxt_state = LOADTOCACHE0;	
 						end
 						else begin
-							nxt_state = WRITEONELOADWORD0;
+							nxt_state = LOADTOCACHE0;
 						end
 					end
 				end
@@ -341,51 +341,6 @@ always_comb begin
 			// 		nxt_state = WRITEONELOADWORD;
 			// 	end
 
-
-			WRITEONELOADWORD0: // writes word0 to the correct cache block in case of a write miss
-				begin
-					cif.dREN = 1;
-					//Read word0 from memory
-					cif.daddr = {dcif.dmemaddr[31:3], 3'b000};
-
-					if(cif.dwait == 1) begin
-						nxt_state = WRITEONELOADWORD0;
-					end
-					else begin
-						if(lru[query.idx]) begin  // update cache 1 tag
-							data_nxt1[0] = cif.dload;	
-						end
-						else begin // update cache 0tag
-							data_nxt0[0] = cif.dload;	
-						end
-						nxt_state = WRITEONELOADWORD1;
-					end
-				end
-
-
-			WRITEONELOADWORD1: // writes word1 to the correct cache block in case of a write miss
-				begin
-					cif.dREN = 1;
-					//Read word1 from memory
-					cif.daddr = {dcif.dmemaddr[31:3], 3'b100};
-
-					if(cif.dwait == 1) begin
-						nxt_state = WRITEONELOADWORD1;
-					end
-					else begin
-						if(lru[query.idx]) begin  // update cache 1 tag
-							data_nxt1[1] = cif.dload;
-							query_tag_nxt1 = query.tag;
-							valid_nxt1 = 1;	
-						end
-						else begin // update cache 0tag
-							data_nxt0[1] = cif.dload;	
-							query_tag_nxt0 = query.tag;
-							valid_nxt0 = 1;
-						end
-						nxt_state = IDLE;
-					end
-				end
 
 
 			FLUSH0:	//Flush table1 of the dcache
