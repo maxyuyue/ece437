@@ -33,9 +33,9 @@ logic[7:0] lru;
 dcachef_t query, snoop;
 
 // Other signals
-logic[3:0] count, nxt_count;//counter variable used in the flush state
+logic[2:0] count, nxt_count;//counter variable used in the flush state
 logic isHit0, isHit1, isSnoopHit0, isSnoopHit1;
-typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM0, WRITETOMEM1, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, END, SNOOP} state_type;	
+typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM0, WRITETOMEM1, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, END, SNOOP, SNOOP1, SNOOP2} state_type;	
 state_type state, nxt_state;
 
 
@@ -345,7 +345,7 @@ always_comb begin
 
 			FLUSH0:	//Flush table1 of the dcache
 				begin
-					if(count == 8) begin	//done flushing the whole cache
+					if(count == 7) begin	//done flushing the whole cache
 						nxt_state = FLUSH1;
 						nxt_count = '0;
 					end
@@ -388,7 +388,7 @@ always_comb begin
 
 			FLUSH1:
 				begin
-					if(count == 8) begin	//done flushing the whole cache
+					if(count == 7) begin	//done flushing the whole cache
 						nxt_state = END;
 						nxt_count = '0;
 					end
@@ -432,30 +432,29 @@ always_comb begin
 
 			SNOOP:
 				begin
-					if (~cif.ccwait) // go back to idle when no longer waiting
-						nxt_state = IDLE;
-					else
-						nxt_state = SNOOP;
-
 					// If dchache[0/1][snoopTag] == snoopaddrTag and Valid then snoop hit
 					if (isSnoopHit0 || isSnoopHit1) begin
-						if (!cif.ccwait) begin // will be going back to IDLE
+						if (~cif.ccwait) begin // will be going back to IDLE
 							ccwrite_nxt = 1'b0;
 							cctrans_nxt = 1'b0;
+							nxt_state = IDLE;
 						end
 						else begin
 							ccwrite_nxt = 1'b1;
 							cctrans_nxt = 1'b1;
+							nxt_state = SNOOP1;
 						end
 					end
 					else begin
-						if (!cif.ccwait) begin // will be going back to IDLE
+						if (~cif.ccwait) begin // will be going back to IDLE
 							ccwrite_nxt = 1'b0;
 							cctrans_nxt = 1'b0;
+							nxt_state = IDLE;
 						end
 						else begin
 							ccwrite_nxt = 1'b0;
 							cctrans_nxt = 1'b1;
+							nxt_state = SNOOP;
 						end
 					end
 
@@ -465,6 +464,37 @@ always_comb begin
 					end
 				end
 
+			SNOOP1: // snoophit: pass first ramaddr and value
+				begin
+					cif.daddr = {snoop.tag, snoop.idx, 4'b0000};
+					
+					if (isSnoopHit0) 
+						cif.dstore = dcache[0][snoop.idx].data[0];
+					else  // snoophit1
+						cif.dstore = dcache[1][snoop.idx].data[0];
+
+					if (cif.dwait == 1) 
+						nxt_state = SNOOP1;
+					else
+						nxt_state = SNOOP2;
+
+				end
+
+			SNOOP2: // snoophit: pass second ramaddr and value
+				begin
+					cif.daddr = {snoop.tag, snoop.idx, 4'b1000};
+					
+					if (isSnoopHit0) 
+						cif.dstore = dcache[0][snoop.idx].data[1];
+					else  // snoophit1
+						cif.dstore = dcache[1][snoop.idx].data[1];
+
+					if (cif.dwait == 1) 
+						nxt_state = SNOOP2;
+					else
+						nxt_state = IDLE;
+
+				end
 			END:
 				begin
 					dcif.flushed = 1;
