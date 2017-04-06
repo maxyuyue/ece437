@@ -87,7 +87,7 @@ always_ff @(posedge CLK, negedge nRST) begin
       	dcache[0][query.idx].valid <= valid_nxt0;
       	dcache[0][query.idx].dirty <= dirty_nxt0;
 		dcache[0][query.idx].tag <= query_tag_nxt0;
-		//dcache[0][snoop.idx].valid <= snoop_valid_nxt0;
+		dcache[0][snoop.idx].valid <= snoop_valid_nxt0;
 
       	//Table1 assignments
       	dcache[1][query.idx].data[0] <= data_nxt1[0];
@@ -95,7 +95,7 @@ always_ff @(posedge CLK, negedge nRST) begin
       	dcache[1][query.idx].valid <= valid_nxt1;
       	dcache[1][query.idx].dirty <= dirty_nxt1;
       	dcache[1][query.idx].tag <= query_tag_nxt1;
-		//dcache[1][snoop.idx].valid <= snoop_valid_nxt1;
+		dcache[1][snoop.idx].valid <= snoop_valid_nxt1;
 
       	state <= nxt_state;
     	read <= read_nxt;
@@ -174,7 +174,7 @@ always_comb begin
 							ccwrite_nxt = 1'b0;
 						end
 						
-						else if(dcache[lru[query.idx]][query.idx].dirty == 1) begin	// If lru cache is dirty must write before using it
+						else if(dcache[lru[query.idx]][query.idx].dirty == 1 && dcache[lru[query.idx]][query.idx].valid == 1) begin	// If lru cache is dirty must write before using it
 							ccwrite_nxt = 1'b1;
 							cctrans_nxt = 1'b0;
 							read_nxt = 1'b1;
@@ -227,7 +227,7 @@ always_comb begin
 							nxt_state = IDLE;
 						end
 
-						else if(dcache[lru[query.idx]][query.idx].dirty == 1) begin	// Cache miss. If lru cache is dirty must write before using it
+						else if(dcache[lru[query.idx]][query.idx].dirty == 1 && dcache[lru[query.idx]][query.idx].valid == 1) begin	// Cache miss. If lru cache is dirty must write before using it
 							read_nxt = 1'b0;
 							cctrans_nxt = 1'b0;
 							ccwrite_nxt = 1'b0;
@@ -349,7 +349,7 @@ always_comb begin
 						nxt_state = FLUSH1;
 						nxt_count = '0;
 					end
-					else if(dcache[0][count[2:0]].dirty) begin	//Write back this data to memory
+					else if(dcache[0][count[2:0]].dirty && dcache[0][count[2:0]].valid) begin	//Write back this data to memory
 							nxt_count = count;
 							nxt_state = WB0_FLUSH0;
 					end
@@ -392,7 +392,7 @@ always_comb begin
 						nxt_state = END;
 						nxt_count = '0;
 					end
-					else if(dcache[1][count[2:0]].dirty) begin	//Write back this data to memory
+					else if(dcache[1][count[2:0]].dirty && dcache[1][count[2:0]].valid) begin	//Write back this data to memory
 							nxt_count = count;
 							nxt_state = WB0_FLUSH1;
 					end
@@ -466,7 +466,7 @@ always_comb begin
 
 			SNOOP1: // snoophit: pass first ramaddr and value
 				begin
-					cif.daddr = {snoop.tag, snoop.idx, 4'b0000};
+					cif.daddr = {snoop.tag, snoop.idx, 3'b000};
 					
 					if (isSnoopHit0) 
 						cif.dstore = dcache[0][snoop.idx].data[0];
@@ -482,7 +482,7 @@ always_comb begin
 
 			SNOOP2: // snoophit: pass second ramaddr and value
 				begin
-					cif.daddr = {snoop.tag, snoop.idx, 4'b1000};
+					cif.daddr = {snoop.tag, snoop.idx, 3'b100};
 					
 					if (isSnoopHit0) 
 						cif.dstore = dcache[0][snoop.idx].data[1];
@@ -493,6 +493,9 @@ always_comb begin
 						nxt_state = SNOOP2;
 					else
 						nxt_state = IDLE;
+
+					snoop_valid_nxt0 = 1'b0;
+					snoop_valid_nxt1 = 1'b0;
 
 				end
 			END:

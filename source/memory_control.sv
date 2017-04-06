@@ -127,7 +127,8 @@ always_comb
           //nxt_ccwait[1] = 1'b0;
           ccwait[0] = 1'b0;
           ccwait[1] = 1'b0;
-
+          nxt_snoopaddr[0] = 32'hBAD1BAD1;
+          nxt_snoopaddr[1] = 32'hBAD1BAD1;
           if(ccif.dWEN[0] && ~ccif.cctrans[0]) // 
             begin
               nxt_state = WRITE_M0;
@@ -295,6 +296,7 @@ always_comb
           else
             begin
               ccif.dwait[serviced] = 0;
+              ccif.dwait[~serviced] = 0;
               ccif.dload[serviced] = ccif.dstore[~serviced];
               nxt_state = WRITE1;
             end
@@ -315,6 +317,8 @@ always_comb
             begin
               ccif.dwait[serviced] = 0;
               ccif.dload[serviced] = ccif.dstore[~serviced];
+              ccif.dwait[~serviced] = 0;
+              
               nxt_state = IDLE;
               ccwait[~serviced] = 1'b0;
               ccwait[serviced] = 1'b0;
