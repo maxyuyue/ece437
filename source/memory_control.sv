@@ -213,8 +213,8 @@ always_comb
 
       SNOOP:
         begin
-          if(ccif.cctrans[serviced]) begin // if nonserviced cache is transfering
-            if(~ccif.ccwrite[serviced]) begin // if nonservice write is 0
+          if(ccif.cctrans[~serviced]) begin // if nonserviced cache is transfering
+            if(~ccif.ccwrite[~serviced]) begin // if nonservice write is 0
               nxt_state = LOAD0;
               if(ccif.cctrans[serviced] && ccif.ccwrite[serviced]) begin // if serviced cache is transfering and writing
                 nxt_ccinv[~serviced] = 1; // invalidate nonservice cache

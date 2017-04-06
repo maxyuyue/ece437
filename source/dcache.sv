@@ -455,7 +455,13 @@ always_comb begin
 
 			END:
 				begin
-					dcif.flushed = 1;	
+					dcif.flushed = 1;
+					if (cif.ccwait)
+						cctrans_nxt = 1'b1;
+					else 
+						cctrans_nxt = 1'b0;
+					
+					ccwrite_nxt = 1'b0;	
 					nxt_state = END;
 				end
 
