@@ -30,11 +30,11 @@ logic cctrans_nxt, ccwrite_nxt, read, read_nxt;
 //dcache
 cache_entry [1:0][7:0] dcache; //8 sets and 2 blocks per set
 logic[7:0] lru;
-dcachef_t query;
+dcachef_t query, snoop;
 
 // Other signals
 logic[3:0] count, nxt_count;//counter variable used in the flush state
-logic isHit0, isHit1;
+logic isHit0, isHit1, isSnoopHit0, isSnoopHit1;
 typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM0, WRITETOMEM1, WRITEONELOADWORD0, WRITEONELOADWORD1, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, END, SNOOP} state_type;	
 state_type state, nxt_state;
 
@@ -44,11 +44,19 @@ assign query.tag = dcif.dmemaddr[31:6];
 assign query.idx = dcif.dmemaddr[5:3];
 assign query.blkoff = dcif.dmemaddr[2];
 assign query.bytoff = 2'b00;
-
 //Hit initializations
 assign isHit0 = (dcache[0][query.idx].tag == query.tag && dcache[0][query.idx].valid == 1) ? 1 : 0;
 assign isHit1 = (dcache[1][query.idx].tag == query.tag && dcache[1][query.idx].valid == 1) ? 1 : 0;
 
+
+//snooping initializations
+assign snoop.tag = cif.ccsnoopaddr[31:6];
+assign snoop.idx = cif.ccsnoopaddr[5:3];
+assign snoop.blkoff = cif.ccsnoopaddr[2];
+assign snoop.bytoff = 2'b00;
+//Snoop hit initializations
+assign isSnoopHit0 = dcache[0][snoop.idx].tag == snoop.tag && dcache[0][snoop.idx].valid == 1;
+assign isSnoopHit1 = dcache[1][snoop.idx].tag == snoop.tag && dcache[1][snoop.idx].valid == 1;
 
 integer i, x;
 always_ff @(posedge CLK, negedge nRST) begin
@@ -473,8 +481,7 @@ always_comb begin
 						nxt_state = SNOOP;
 
 					// If dchache[0/1][snoopTag] == snoopaddrTag and Valid then snoop hit
-					if ((dcache[0][cif.ccsnoopaddr[5:3]].tag == cif.ccsnoopaddr[31:6] && dcache[0][cif.ccsnoopaddr[5:3]].valid == 1) ||
-					(dcache[1][cif.ccsnoopaddr[5:3]].tag == cif.ccsnoopaddr[31:6] && dcache[1][cif.ccsnoopaddr[5:3]].valid == 1)) begin
+					if () begin
 						ccwrite_nxt = 1'b1;
 						cctrans_nxt = 1'b1;
 					end
