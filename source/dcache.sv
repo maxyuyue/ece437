@@ -217,6 +217,8 @@ always_comb begin
 
 						else if(dcache[lru[query.idx]][query.idx].dirty == 1) begin	// Cache miss. If lru cache is dirty must write before using it
 							read_nxt = 1'b0;
+							cctrans_nxt = 1'b0;
+							ccwrite_nxt = 1'b0;
 							nxt_state = WRITETOMEM0; // write dirty value to memory before writing
 						end
 
@@ -232,6 +234,8 @@ always_comb begin
 
 					else begin
 							nxt_state = IDLE;
+							cctrans_nxt = 1'b0;
+							ccwrite_nxt = 1'b0;
 					end
 				end
 

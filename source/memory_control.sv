@@ -123,6 +123,9 @@ always_comb
     case (state)
       IDLE:
         begin
+          //nxt_ccwait[0] = 1'b0;
+          //nxt_ccwait[1] = 1'b0;
+
           if(ccif.dWEN[0] && ~ccif.cctrans[0]) // 
             begin
               nxt_state = WRITE_M0;
