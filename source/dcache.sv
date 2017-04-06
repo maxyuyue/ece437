@@ -439,12 +439,24 @@ always_comb begin
 
 					// If dchache[0/1][snoopTag] == snoopaddrTag and Valid then snoop hit
 					if (isSnoopHit0 || isSnoopHit1) begin
-						ccwrite_nxt = 1'b1;
-						cctrans_nxt = 1'b1;
+						if (!cif.ccwait) begin // will be going back to IDLE
+							ccwrite_nxt = 1'b0;
+							cctrans_nxt = 1'b0;
+						end
+						else begin
+							ccwrite_nxt = 1'b1;
+							cctrans_nxt = 1'b1;
+						end
 					end
 					else begin
-						ccwrite_nxt = 1'b0;
-						cctrans_nxt = 1'b1;
+						if (!cif.ccwait) begin // will be going back to IDLE
+							ccwrite_nxt = 1'b0;
+							cctrans_nxt = 1'b0;
+						end
+						else begin
+							ccwrite_nxt = 1'b0;
+							cctrans_nxt = 1'b1;
+						end
 					end
 
 					if (cif.ccinv) begin// invalidate cache entry for snoop address 

@@ -70,8 +70,8 @@ always_ff @(posedge CLK or negedge nRST)
         ccinv[1] <= 0;
         snoopaddr[0] <= '0;
         snoopaddr[1] <= '0;
-        ccwait[0] <= 0;
-        ccwait[1] <= 0;
+        //ccwait[0] <= 0;
+        //ccwait[1] <= 0;
         serviced <= 0;
         lru <= 0;
         i <= 0;
@@ -83,8 +83,8 @@ always_ff @(posedge CLK or negedge nRST)
       ccinv[1] <= nxt_ccinv[1];
       snoopaddr[0] <= nxt_snoopaddr[0];
       snoopaddr[1] <= nxt_snoopaddr[1];
-      ccwait[0] <= nxt_ccwait[0];
-      ccwait[1] <= nxt_ccwait[1];
+      //ccwait[0] <= nxt_ccwait[0];
+      //ccwait[1] <= nxt_ccwait[1];
       serviced <= nxt_serviced;
       lru <= nlru;
       i <= nxt_i;
@@ -109,8 +109,8 @@ always_comb
     ccif.dwait[0] = 1;    
     ccif.dwait[1] = 1;
 
-    nxt_ccwait[0] = ccwait[0];
-    nxt_ccwait[1] = ccwait[1];
+    //nxt_ccwait[0] = ccwait[0];
+    //nxt_ccwait[1] = ccwait[1];
     nxt_ccinv[0] = ccinv[0];
     nxt_ccinv[1] = ccinv[1];
     nxt_snoopaddr[0] = snoopaddr[0];
@@ -125,6 +125,8 @@ always_comb
         begin
           //nxt_ccwait[0] = 1'b0;
           //nxt_ccwait[1] = 1'b0;
+          ccwait[0] = 1'b0;
+          ccwait[1] = 1'b0;
 
           if(ccif.dWEN[0] && ~ccif.cctrans[0]) // 
             begin
@@ -134,8 +136,6 @@ always_comb
 
           else if(ccif.cctrans[0])
             begin
-              nxt_ccwait[1] = 1;
-              nxt_ccwait[0] = 0; // TODO: Make sure this is correct
               nxt_serviced = 0;
               nxt_snoopaddr[1] = ccif.daddr[0]; 
               nxt_state = SNOOP;
@@ -149,8 +149,6 @@ always_comb
 
           else if(ccif.cctrans[1])
             begin
-              nxt_ccwait[1] = 0; // TODO: Make sure this is correct
-              nxt_ccwait[0] = 1;
               nxt_serviced = 1;
               nxt_snoopaddr[0] = ccif.daddr[1]; 
               nxt_state = SNOOP;
@@ -180,6 +178,8 @@ always_comb
 
       WRITE_M0:
         begin
+          ccwait[~serviced] = 1'b1;
+          ccwait[serviced] = 1'b0;
           ccif.ramWEN = 1;
           ccif.ramstore = ccif.dstore[serviced];
           ccif.ramaddr = ccif.daddr[serviced];
@@ -197,6 +197,8 @@ always_comb
 
       WRITE_M1:
         begin
+          ccwait[~serviced] = 1'b1;
+          ccwait[serviced] = 1'b0;
           ccif.ramWEN = 1;
           ccif.ramstore = ccif.dstore[serviced];
           ccif.ramaddr = ccif.daddr[serviced];
@@ -213,6 +215,8 @@ always_comb
 
       SNOOP:
         begin
+          ccwait[~serviced] = 1'b1;
+          ccwait[serviced] = 1'b0;
           if(ccif.cctrans[~serviced]) begin // if nonserviced cache is transfering
             if(~ccif.ccwrite[~serviced]) begin // if nonservice write is 0
               nxt_state = LOAD0;
@@ -237,6 +241,8 @@ always_comb
 
       LOAD0:
         begin
+          ccwait[~serviced] = 1'b1;
+          ccwait[serviced] = 1'b0;
           ccif.ramREN = 1;
           ccif.ramaddr = ccif.daddr[serviced];
           if(ccif.ramstate != ACCESS)
@@ -253,6 +259,8 @@ always_comb
 
       LOAD1:
         begin
+          ccwait[~serviced] = 1'b0;
+          ccwait[serviced] = 1'b0;
           ccif.ramREN = 1;
           ccif.ramaddr = ccif.daddr[serviced];
           if(ccif.ramstate != ACCESS)
@@ -269,6 +277,8 @@ always_comb
 
       WRITE0:
         begin
+          ccwait[~serviced] = 1'b1;
+          ccwait[serviced] = 1'b0;
           ccif.ramWEN = 1;
           ccif.ramstore = ccif.dstore[~serviced];
           ccif.ramaddr = ccif.daddr[~serviced];
@@ -286,6 +296,8 @@ always_comb
 
       WRITE1:
         begin
+          ccwait[~serviced] = 1'b1;
+          ccwait[serviced] = 1'b0;
           ccif.ramWEN = 1;
           ccif.ramstore = ccif.dstore[~serviced];
           ccif.ramaddr = ccif.daddr[~serviced];
@@ -303,6 +315,8 @@ always_comb
 
       INSTR:
         begin
+          ccwait[0] = 1'b0;
+          ccwait[1] = 1'b0;
           ccif.ramREN = 1;
           ccif.ramaddr = ccif.iaddr[i];
           if(ccif.ramstate != ACCESS)
