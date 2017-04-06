@@ -197,18 +197,19 @@ always_comb
 
       WRITE_M1:
         begin
-          ccwait[~serviced] = 1'b1;
-          ccwait[serviced] = 1'b0;
           ccif.ramWEN = 1;
           ccif.ramstore = ccif.dstore[serviced];
           ccif.ramaddr = ccif.daddr[serviced];
-          if(ccif.ramstate != ACCESS)
-            begin
-              nxt_state = WRITE_M1;
-            end
+          if(ccif.ramstate != ACCESS) begin
+            ccwait[~serviced] = 1'b1;
+            ccwait[serviced] = 1'b0;
+            nxt_state = WRITE_M1;
+          end
           else
             begin
               ccif.dwait[serviced] = 0;
+              ccwait[~serviced] = 1'b0;
+              ccwait[serviced] = 1'b0;
               nxt_state = IDLE;
             end
         end
@@ -248,6 +249,8 @@ always_comb
           if(ccif.ramstate != ACCESS)
             begin
               nxt_state = LOAD0;
+              ccwait[~serviced] = 1'b1;
+              ccwait[serviced] = 1'b0;
             end
           else
             begin
@@ -259,18 +262,21 @@ always_comb
 
       LOAD1:
         begin
-          ccwait[~serviced] = 1'b0;
-          ccwait[serviced] = 1'b0;
+          
           ccif.ramREN = 1;
           ccif.ramaddr = ccif.daddr[serviced];
           if(ccif.ramstate != ACCESS)
             begin
               nxt_state = LOAD1;
+              ccwait[~serviced] = 1'b1;
+              ccwait[serviced] = 1'b0;
             end
           else
             begin
               ccif.dwait[serviced] = 0;
               ccif.dload[serviced] = ccif.ramload;
+              ccwait[~serviced] = 1'b0;
+              ccwait[serviced] = 1'b0;
               nxt_state = IDLE;
             end
         end
@@ -296,20 +302,22 @@ always_comb
 
       WRITE1:
         begin
-          ccwait[~serviced] = 1'b1;
-          ccwait[serviced] = 1'b0;
           ccif.ramWEN = 1;
           ccif.ramstore = ccif.dstore[~serviced];
           ccif.ramaddr = ccif.daddr[~serviced];
           if(ccif.ramstate != ACCESS)
             begin
               nxt_state = WRITE1;
+              ccwait[~serviced] = 1'b1;
+              ccwait[serviced] = 1'b0;
             end
           else
             begin
               ccif.dwait[serviced] = 0;
               ccif.dload[serviced] = ccif.dstore[~serviced];
               nxt_state = IDLE;
+              ccwait[~serviced] = 1'b0;
+              ccwait[serviced] = 1'b0;
             end
         end 
 

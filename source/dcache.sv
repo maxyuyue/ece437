@@ -317,7 +317,7 @@ always_comb begin
 					end
 					else begin
 						if (read) begin
-							cctrans_nxt = 1;
+							cctrans_nxt = 0;
 							ccwrite_nxt = 0;
 							nxt_state = LOADTOCACHE0;	
 						end
