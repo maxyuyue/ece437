@@ -475,8 +475,11 @@ always_comb begin
 
 					if (cif.dwait == 1) 
 						nxt_state = SNOOP1;
-					else
+					else begin
 						nxt_state = SNOOP2;
+						ccwrite_nxt = 1'b0;
+						cctrans_nxt = 1'b0;
+					end
 
 				end
 
