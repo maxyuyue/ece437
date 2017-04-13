@@ -84,18 +84,20 @@ always_ff @(posedge CLK, negedge nRST) begin
       	//Table 0 assignments
       	dcache[0][query.idx].data[0] <= data_nxt0[0];
       	dcache[0][query.idx].data[1] <= data_nxt0[1];
-      	dcache[0][query.idx].valid <= valid_nxt0;
+      	
       	dcache[0][query.idx].dirty <= dirty_nxt0;
 		dcache[0][query.idx].tag <= query_tag_nxt0;
 		dcache[0][snoop.idx].valid <= snoop_valid_nxt0;
+		dcache[0][query.idx].valid <= valid_nxt0;
 
       	//Table1 assignments
       	dcache[1][query.idx].data[0] <= data_nxt1[0];
       	dcache[1][query.idx].data[1] <= data_nxt1[1];
-      	dcache[1][query.idx].valid <= valid_nxt1;
+      	
       	dcache[1][query.idx].dirty <= dirty_nxt1;
       	dcache[1][query.idx].tag <= query_tag_nxt1;
 		dcache[1][snoop.idx].valid <= snoop_valid_nxt1;
+		dcache[1][query.idx].valid <= valid_nxt1;
 
       	state <= nxt_state;
     	read <= read_nxt;
