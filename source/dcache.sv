@@ -154,7 +154,35 @@ always_comb begin
 			IDLE:
 				begin
 					if (cif.ccwait) begin
-						nxt_state = SNOOP;
+						if (isSnoopHit0 || isSnoopHit1) begin
+							if (~cif.ccwait) begin // will be going back to IDLE
+								ccwrite_nxt = 1'b0;
+								cctrans_nxt = 1'b0;
+								nxt_state = IDLE;
+							end
+							else begin
+								ccwrite_nxt = 1'b1;
+								cctrans_nxt = 1'b1;
+								nxt_state = SNOOP1;
+							end
+						end
+						else begin
+							if (~cif.ccwait) begin // will be going back to IDLE
+								ccwrite_nxt = 1'b0;
+								cctrans_nxt = 1'b0;
+								nxt_state = IDLE;
+							end
+							else begin
+								ccwrite_nxt = 1'b0;
+								cctrans_nxt = 1'b1;
+								nxt_state = SNOOP;
+							end
+						end
+
+						if (cif.ccinv) begin// invalidate cache entry for snoop address 
+							snoop_valid_nxt0 = 1'b0;
+							snoop_valid_nxt1 = 1'b0;
+						end
 					end
 
 					else if(dcif.dmemREN) begin //data read
