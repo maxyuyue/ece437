@@ -111,8 +111,8 @@ always_comb
 
     //nxt_ccwait[0] = ccwait[0];
     //nxt_ccwait[1] = ccwait[1];
-    nxt_ccinv[0] = ccinv[0];
-    nxt_ccinv[1] = ccinv[1];
+    nxt_ccinv[0] = 0;
+    nxt_ccinv[1] = 0;
     nxt_snoopaddr[0] = snoopaddr[0];
     nxt_snoopaddr[1] = snoopaddr[1];
 
@@ -135,18 +135,18 @@ always_comb
               nxt_serviced = 0;
             end
 
+          else if(ccif.dWEN[1] && ~ccif.cctrans[1])
+            begin
+              nxt_state = WRITE_M0;
+              nxt_serviced = 1;
+            end  
+
           else if(ccif.cctrans[0])
             begin
               nxt_serviced = 0;
               nxt_snoopaddr[1] = ccif.daddr[0]; 
               nxt_state = SNOOP;
             end 
-
-          else if(ccif.dWEN[1] && ~ccif.cctrans[1])
-            begin
-              nxt_state = WRITE_M0;
-              nxt_serviced = 1;
-            end
 
           else if(ccif.cctrans[1])
             begin
