@@ -24,7 +24,7 @@ typedef struct packed {
 logic [31:0] link_reg, link_reg_nxt;
 
 //Values used to update cache in always_ff block
-logic lru_nxt, valid_nxt0, valid_nxt1, dirty_nxt0, dirty_nxt1, snoop_valid_nxt0, snoop_valid_nxt1;
+logic lru_nxt, valid_nxt0, valid_nxt1, dirty_nxt0, dirty_nxt1, snoop_valid_nxt0, snoop_valid_nxt1, snoop_dirty_nxt0, snoop_dirty_nxt1, isBeingSnooped;
 logic[25:0] query_tag_nxt0, query_tag_nxt1;
 word_t[1:0] data_nxt0, data_nxt1;
 logic cctrans_nxt, ccwrite_nxt, read, read_nxt;
@@ -35,8 +35,8 @@ logic[7:0] lru;
 dcachef_t query, snoop;
 
 // Other signals
-logic[2:0] count, nxt_count;//counter variable used in the flush state
-logic isHit0, isHit1, isSnoopHit0, isSnoopHit1;
+logic[3:0] count, nxt_count;//counter variable used in the flush state
+logic isHitRead0, isHitRead1, isHitWrite0, isHitWrite1, isSnoopHit0, isSnoopHit1;
 typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM0, WRITETOMEM1, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, END, SNOOP, SNOOP1, SNOOP2} state_type;	
 state_type state, nxt_state;
 
@@ -47,8 +47,10 @@ assign query.idx = dcif.dmemaddr[5:3];
 assign query.blkoff = dcif.dmemaddr[2];
 assign query.bytoff = 2'b00;
 //Hit initializations
-assign isHit0 = (dcache[0][query.idx].tag == query.tag && dcache[0][query.idx].valid == 1) ? 1 : 0;
-assign isHit1 = (dcache[1][query.idx].tag == query.tag && dcache[1][query.idx].valid == 1) ? 1 : 0;
+assign isHitRead0 = (dcache[0][query.idx].tag == query.tag && dcache[0][query.idx].valid == 1) ? 1 : 0;
+assign isHitRead1 = (dcache[1][query.idx].tag == query.tag && dcache[1][query.idx].valid == 1) ? 1 : 0;
+assign isHitWrite0 = (dcache[0][query.idx].tag == query.tag && dcache[0][query.idx].valid == 1 && dcache[0][query.idx].dirty != 0) ? 1 : 0;
+assign isHitWrite1 = (dcache[1][query.idx].tag == query.tag && dcache[1][query.idx].valid == 1 && dcache[1][query.idx].dirty != 0) ? 1 : 0;
 
 
 //snooping initializations
@@ -92,8 +94,9 @@ always_ff @(posedge CLK, negedge nRST) begin
   	dcache[0][query.idx].dirty <= dirty_nxt0;
 		dcache[0][query.idx].tag <= query_tag_nxt0;
 		dcache[0][query.idx].valid <= valid_nxt0;
-		if (cif.ccinv)
+		if (isBeingSnooped)
 			dcache[0][snoop.idx].valid <= snoop_valid_nxt0;
+	  	dcache[0][snoop.idx].dirty <= snoop_dirty_nxt0;
 
   	//Table1 assignments
   	dcache[1][query.idx].data[0] <= data_nxt1[0];
@@ -102,8 +105,9 @@ always_ff @(posedge CLK, negedge nRST) begin
   	dcache[1][query.idx].dirty <= dirty_nxt1;
   	dcache[1][query.idx].tag <= query_tag_nxt1;
 		dcache[1][query.idx].valid <= valid_nxt1;
-  	if (cif.ccinv)
+  	if (isBeingSnooped)
 			dcache[1][snoop.idx].valid <= snoop_valid_nxt1;
+	  	dcache[1][snoop.idx].dirty <= snoop_dirty_nxt1;
 
   	state <= nxt_state;
   	read <= read_nxt;
@@ -117,7 +121,7 @@ always_ff @(posedge CLK, negedge nRST) begin
 //State machine
 always_comb begin
 	nxt_state = state;
-    
+   isBeingSnooped = 0; 
     // DCIF 
     dcif.dhit = 0;  
     dcif.flushed = 0;
@@ -140,6 +144,7 @@ always_comb begin
     dirty_nxt0 = dcache[0][query.idx].dirty;
     query_tag_nxt0 = dcache[0][query.idx].tag;	
     snoop_valid_nxt0 = dcache[0][snoop.idx].valid;
+    snoop_dirty_nxt0 = dcache[0][snoop.idx].dirty;
 
     // Table1
     data_nxt1[0] = dcache[1][query.idx].data[0];
@@ -148,6 +153,7 @@ always_comb begin
     dirty_nxt1 = dcache[1][query.idx].dirty;
     query_tag_nxt1 = dcache[1][query.idx].tag;
     snoop_valid_nxt1 = dcache[1][snoop.idx].valid;
+    snoop_dirty_nxt1 = dcache[1][snoop.idx].dirty;
 
     //counter variables for flush state
     nxt_count = count;
@@ -160,8 +166,8 @@ always_comb begin
 		case(state)
 			IDLE:
 				begin
-					cctrans_nxt = 0;
-					ccwrite_nxt = 0;
+					//cctrans_nxt = 0;
+					//ccwrite_nxt = 0;
 					if (cif.ccwait) begin
 						nxt_state = SNOOP;
 					end
@@ -170,7 +176,7 @@ always_comb begin
 						if (dcif.datomic) 
 							link_reg_nxt <= dcif.dmemaddr;
 
-						if(isHit0) begin // hit in cache 0 for read
+						if(isHitRead0) begin // hit in cache 0 for read
 							dcif.dmemload = dcache[0][query.idx].data[query.blkoff]; // send value to datapath
 							dcif.dhit = 1;
 							lru_nxt = 1; // Cache 1 is now the least recently used
@@ -179,7 +185,7 @@ always_comb begin
 							ccwrite_nxt = 1'b0;
 						end
 
-						else if (isHit1) begin // hit in cache 1 for read
+						else if (isHitRead1) begin // hit in cache 1 for read
 							dcif.dmemload = dcache[1][query.idx].data[query.blkoff]; // send value to datapath
 							dcif.dhit = 1;
 							lru_nxt = 0; //Cache 0 is now the least recently used
@@ -216,8 +222,13 @@ always_comb begin
 							dcif.dmemload = 1;
 							link_reg_nxt <= '0; // now invalidate
 
-						if(isHit0) begin // hit in cache 0 for write
+						if(isHitWrite0) begin // hit in cache 0 for write
 							dcif.dhit = 1;
+							// if(query.blkoff)
+							// 	cif.daddr = {dcif.dmemaddr[31:3], 3'b100};
+							// else
+							// 	cif.daddr = {dcif.dmemaddr[31:3], 3'b000};
+
 							lru_nxt = 1; // Cache 1 now least recently sed
 							data_nxt0[query.blkoff] = dcif.dmemstore;
 							dirty_nxt0 = 1;
@@ -231,12 +242,15 @@ always_comb begin
 								cctrans_nxt = 1'b0;
 							end
 							nxt_state = IDLE;
-							cctrans_nxt = 0;
-							ccwrite_nxt = 0;
 						end
 
-						else if(isHit1) begin // hit in cache 1 for write
+						else if(isHitWrite1) begin // hit in cache 1 for write
 							dcif.dhit = 1;
+							// if(query.blkoff)
+							// 	cif.daddr = {dcif.dmemaddr[31:3], 3'b100};
+							// else
+							// 	cif.daddr = {dcif.dmemaddr[31:3], 3'b000};
+
 							lru_nxt = 0; // Cache 0 is now the least recently used
 							data_nxt1[query.blkoff] = dcif.dmemstore;
 							dirty_nxt1 = 1;
@@ -250,8 +264,6 @@ always_comb begin
 								cctrans_nxt = 1'b0;
 							end
 							nxt_state = IDLE;
-							cctrans_nxt = 0;
-							ccwrite_nxt = 0;
 						end
 
 						else if(dcache[lru[query.idx]][query.idx].dirty == 1 && dcache[lru[query.idx]][query.idx].valid == 1) begin	// Cache miss. If lru cache is dirty must write before using it
@@ -308,13 +320,23 @@ always_comb begin
 							query_tag_nxt1 = query.tag;
 							data_nxt1[1] = cif.dload;
 							valid_nxt1 = 1;
-							dirty_nxt1 = 0;			
+							if(dcif.dmemREN)
+								dirty_nxt1 = 0;
+							else if(dcif.dmemWEN)
+								dirty_nxt1 = 1;		
+								if(dcache[0][query.idx].tag == query.tag)
+									valid_nxt0 = 0;
 						end
 						else begin
 							query_tag_nxt0 = query.tag;
 							data_nxt0[1] = cif.dload;	
 							valid_nxt0 = 1;
-							dirty_nxt0 = 0;
+							if(dcif.dmemREN)
+								dirty_nxt0 = 0;
+							else if(dcif.dmemWEN)
+								dirty_nxt0 = 1;	
+								if(dcache[1][query.idx].tag == query.tag)
+									valid_nxt1= 0;
 						end
 						nxt_state = IDLE; 
 						cctrans_nxt = 0;
@@ -359,17 +381,21 @@ always_comb begin
 
 			FLUSH0:	//Flush table1 of the dcache
 				begin
-					if(count == 7) begin	//done flushing the whole cache
+					if(count == 8) begin	//done flushing the whole cache
 						nxt_state = FLUSH1;
 						nxt_count = '0;
 					end
 					else if(dcache[0][count[2:0]].dirty && dcache[0][count[2:0]].valid) begin	//Write back this data to memory
 							nxt_count = count;
 							nxt_state = WB0_FLUSH0;
+							valid_nxt0 = 0;
+							dirty_nxt0 = 0;
 					end
 					else begin
 							nxt_count = count + 1;
 							nxt_state = FLUSH0;
+							valid_nxt0 = 0;
+							dirty_nxt0 = 0;							
 					end
 				end	
 
@@ -402,17 +428,21 @@ always_comb begin
 
 			FLUSH1:
 				begin
-					if(count == 7) begin	//done flushing the whole cache
+					if(count == 8) begin	//done flushing the whole cache
 						nxt_state = END;
 						nxt_count = '0;
 					end
 					else if(dcache[1][count[2:0]].dirty && dcache[1][count[2:0]].valid) begin	//Write back this data to memory
 							nxt_count = count;
 							nxt_state = WB0_FLUSH1;
+							valid_nxt0 = 0;
+							dirty_nxt0 = 0;							
 					end
 					else begin
 							nxt_count = count + 1;
 							nxt_state = FLUSH1;
+							valid_nxt0 = 0;
+							dirty_nxt0 = 0;							
 					end
 				end
 			
@@ -446,6 +476,7 @@ always_comb begin
 
 			SNOOP:
 				begin
+					isBeingSnooped = 1;
 					// If dchache[0/1][snoopTag] == snoopaddrTag and Valid then snoop hit
 					if (isSnoopHit0 || isSnoopHit1) begin
 						if (~cif.ccwait) begin // will be going back to IDLE
@@ -481,15 +512,25 @@ always_comb begin
 							begin
 								snoop_valid_nxt0 = 1'b0;
 							end
-						else if(isSnoopHit1 && ~dcache[1][snoop.idx].dirty)
+						else if(isSnoopHit0)
+							begin
+								snoop_dirty_nxt0 = 1'b0;
+							end
+
+						if(isSnoopHit1 && ~dcache[1][snoop.idx].dirty)
 							begin
 								snoop_valid_nxt1 = 1'b0;
+							end
+						else if(isSnoopHit1)
+							begin
+								snoop_dirty_nxt1 = 1'b0;
 							end
 					end
 				end
 
 			SNOOP1: // snoophit: pass first ramaddr and value
 				begin
+					isBeingSnooped = 1;
 					cif.daddr = {snoop.tag, snoop.idx, 3'b000};
 					
 					if (isSnoopHit0) 
@@ -509,6 +550,7 @@ always_comb begin
 
 			SNOOP2: // snoophit: pass second ramaddr and value
 				begin
+					isBeingSnooped = 1;
 					cif.daddr = {snoop.tag, snoop.idx, 3'b100};
 					
 					if (isSnoopHit0) 
@@ -535,6 +577,7 @@ always_comb begin
 							end							
 						end
 				end
+
 			END:
 				begin
 					dcif.flushed = 1;
