@@ -21,6 +21,8 @@ typedef struct packed {
   logic dirty;
 } cache_entry;
 
+logic [31:0] link_reg, link_reg_nxt;
+
 //Values used to update cache in always_ff block
 logic lru_nxt, valid_nxt0, valid_nxt1, dirty_nxt0, dirty_nxt1, snoop_valid_nxt0, snoop_valid_nxt1;
 logic[25:0] query_tag_nxt0, query_tag_nxt1;
@@ -62,6 +64,7 @@ integer i, x;
 always_ff @(posedge CLK, negedge nRST) begin
 	if(nRST == 1'b0) begin
 		state <= IDLE;
+		link_reg <= '0;
 		cif.cctrans <= 1'b0;
 		cif.ccwrite <= 1'b0;
 		read <= 1'b0;
@@ -81,6 +84,7 @@ always_ff @(posedge CLK, negedge nRST) begin
 	end 
 	else begin
     lru[query.idx] <= lru_nxt;
+    link_reg <= link_reg_nxt;
   	//Table 0 assignments
   	dcache[0][query.idx].data[0] <= data_nxt0[0];
   	dcache[0][query.idx].data[1] <= data_nxt0[1];
@@ -151,6 +155,7 @@ always_comb begin
     cctrans_nxt = cif.cctrans;
     ccwrite_nxt = cif.ccwrite;
     read_nxt = read;
+    link_reg_nxt = link_reg;
 
 		case(state)
 			IDLE:
@@ -162,6 +167,9 @@ always_comb begin
 					end
 
 					else if(dcif.dmemREN) begin //data read
+						if (dcif.datomic) 
+							link_reg_nxt <= dcif.dmemaddr;
+
 						if(isHit0) begin // hit in cache 0 for read
 							dcif.dmemload = dcache[0][query.idx].data[query.blkoff]; // send value to datapath
 							dcif.dhit = 1;
@@ -199,6 +207,14 @@ always_comb begin
 					end
 
 					else if(dcif.dmemWEN) begin //data write
+						if (dcif.dmemaddr == link_reg && ~dcif.datomic) // if address matches and not sc 
+								link_reg_nxt <= '0; // invalidate
+
+						if (dcif.datomic && (dcif.dmemaddr != link_reg)) // if atomic and addresses don't match
+							dcif.dmemload = 0;
+						else if (dcif.datomic && (dcif.dmemaddr == link_reg)) // if atomic and addresses match
+							dcif.dmemload = 1;
+
 						if(isHit0) begin // hit in cache 0 for write
 							dcif.dhit = 1;
 							lru_nxt = 1; // Cache 1 now least recently sed
@@ -340,21 +356,6 @@ always_comb begin
 				end
 
 
-			// WRITETOCACHE: //This state will change the tag of the block at query.idx, so that we get a hit
-			// 	begin
-			// 		if(lru[query.idx]) begin // update cache 1 tag
-			// 			query_tag_nxt1 = query.tag;
-			// 			valid_nxt1 = 1;
-			// 		end
-			// 		else begin // update cache 0 tag
-			// 			query_tag_nxt0 = query.tag;
-			// 			valid_nxt0 = 1;
-			// 		end
-			// 		nxt_state = WRITEONELOADWORD;
-			// 	end
-
-
-
 			FLUSH0:	//Flush table1 of the dcache
 				begin
 					if(count == 7) begin	//done flushing the whole cache
@@ -454,6 +455,9 @@ always_comb begin
 						else begin
 							ccwrite_nxt = 1'b1;
 							cctrans_nxt = 1'b1;
+							if (cif.ccsnoopaddr == link_reg) // if snoop address matches and a write
+								link_reg_nxt <= '0; // invalidate
+
 							nxt_state = SNOOP1;
 						end
 					end

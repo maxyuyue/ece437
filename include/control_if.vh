@@ -20,7 +20,7 @@ interface control_if;
 
 
   // Outputs
-  logic   regDst, branch, WEN, aluSrc, jmp, jl, jmpReg, dREN, dWEN, lui, bne, zeroExt, shiftSel;
+  logic   regDst, branch, WEN, aluSrc, jmp, jl, jmpReg, dREN, dWEN, lui, bne, zeroExt, shiftSel, ll;
   logic	  [1:0] aluCont;
   aluop_t aluOp;
 
