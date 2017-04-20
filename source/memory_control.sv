@@ -111,8 +111,8 @@ always_comb
 
     //nxt_ccwait[0] = ccwait[0];
     //nxt_ccwait[1] = ccwait[1];
-    nxt_ccinv[0] = 0;
-    nxt_ccinv[1] = 0;
+    nxt_ccinv[0] = ccinv[0];
+    nxt_ccinv[1] = ccinv[1];
     nxt_snoopaddr[0] = snoopaddr[0];
     nxt_snoopaddr[1] = snoopaddr[1];
 
@@ -123,6 +123,8 @@ always_comb
     case (state)
       IDLE:
         begin
+          nxt_ccinv[0] = 0;
+          nxt_ccinv[1] = 0;          
           //nxt_ccwait[0] = 1'b0;
           //nxt_ccwait[1] = 1'b0;
           ccwait[0] = 1'b0;
@@ -135,12 +137,6 @@ always_comb
               nxt_serviced = 0;
             end
 
-          else if(ccif.dWEN[1] && ~ccif.cctrans[1])
-            begin
-              nxt_state = WRITE_M0;
-              nxt_serviced = 1;
-            end  
-
           else if(ccif.cctrans[0])
             begin
               nxt_serviced = 0;
@@ -148,6 +144,12 @@ always_comb
               nxt_state = SNOOP;
             end 
 
+          else if(ccif.dWEN[1] && ~ccif.cctrans[1])
+            begin
+              nxt_state = WRITE_M0;
+              nxt_serviced = 1;
+            end  
+            
           else if(ccif.cctrans[1])
             begin
               nxt_serviced = 1;
@@ -179,6 +181,8 @@ always_comb
 
       WRITE_M0:
         begin
+          nxt_ccinv[0] = 0;
+          nxt_ccinv[1] = 0;
           ccwait[~serviced] = 1'b1;
           ccwait[serviced] = 1'b0;
           ccif.ramWEN = 1;
@@ -198,6 +202,8 @@ always_comb
 
       WRITE_M1:
         begin
+          nxt_ccinv[0] = 0;
+          nxt_ccinv[1] = 0;          
           ccif.ramWEN = 1;
           ccif.ramstore = ccif.dstore[serviced];
           ccif.ramaddr = ccif.daddr[serviced];
@@ -216,7 +222,7 @@ always_comb
         end
 
       SNOOP:
-        begin
+        begin          
           ccwait[~serviced] = 1'b1;
           ccwait[serviced] = 1'b0;
           if(ccif.cctrans[~serviced]) begin // if nonserviced cache is transfering
@@ -327,6 +333,8 @@ always_comb
 
       INSTR:
         begin
+          nxt_ccinv[0] = 0;
+          nxt_ccinv[1] = 0;
           ccwait[0] = 1'b0;
           ccwait[1] = 1'b0;
           ccif.ramREN = 1;

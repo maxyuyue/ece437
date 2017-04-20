@@ -35,7 +35,7 @@ dcachef_t query, snoop;
 // Other signals
 logic[2:0] count, nxt_count;//counter variable used in the flush state
 logic isHit0, isHit1, isSnoopHit0, isSnoopHit1;
-typedef enum {SYNC0, SYNC1, IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM0, WRITETOMEM1, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, END, SNOOP, SNOOP1, SNOOP2} state_type;	
+typedef enum {IDLE, LOADTOCACHE0, LOADTOCACHE1, WRITETOMEM0, WRITETOMEM1, WB0_FLUSH0, WB1_FLUSH0, WB0_FLUSH1, WB1_FLUSH1, FLUSH0, FLUSH1, END, SNOOP, SNOOP1, SNOOP2} state_type;	
 state_type state, nxt_state;
 
 
@@ -87,8 +87,9 @@ always_ff @(posedge CLK, negedge nRST) begin
   	
   	dcache[0][query.idx].dirty <= dirty_nxt0;
 		dcache[0][query.idx].tag <= query_tag_nxt0;
-		dcache[0][snoop.idx].valid <= snoop_valid_nxt0;
 		dcache[0][query.idx].valid <= valid_nxt0;
+		if (cif.ccinv)
+			dcache[0][snoop.idx].valid <= snoop_valid_nxt0;
 
   	//Table1 assignments
   	dcache[1][query.idx].data[0] <= data_nxt1[0];
@@ -96,8 +97,9 @@ always_ff @(posedge CLK, negedge nRST) begin
   	
   	dcache[1][query.idx].dirty <= dirty_nxt1;
   	dcache[1][query.idx].tag <= query_tag_nxt1;
-		dcache[1][snoop.idx].valid <= snoop_valid_nxt1;
 		dcache[1][query.idx].valid <= valid_nxt1;
+  	if (cif.ccinv)
+			dcache[1][snoop.idx].valid <= snoop_valid_nxt1;
 
   	state <= nxt_state;
   	read <= read_nxt;
@@ -153,36 +155,10 @@ always_comb begin
 		case(state)
 			IDLE:
 				begin
+					cctrans_nxt = 0;
+					ccwrite_nxt = 0;
 					if (cif.ccwait) begin
-						if (isSnoopHit0 || isSnoopHit1) begin
-							if (~cif.ccwait) begin // will be going back to IDLE
-								ccwrite_nxt = 1'b0;
-								cctrans_nxt = 1'b0;
-								nxt_state = IDLE;
-							end
-							else begin
-								ccwrite_nxt = 1'b1;
-								cctrans_nxt = 1'b1;
-								nxt_state = SNOOP1;
-							end
-						end
-						else begin
-							if (~cif.ccwait) begin // will be going back to IDLE
-								ccwrite_nxt = 1'b0;
-								cctrans_nxt = 1'b0;
-								nxt_state = IDLE;
-							end
-							else begin
-								ccwrite_nxt = 1'b0;
-								cctrans_nxt = 1'b1;
-								nxt_state = SNOOP;
-							end
-						end
-
-						if (cif.ccinv) begin// invalidate cache entry for snoop address 
-							snoop_valid_nxt0 = 1'b0;
-							snoop_valid_nxt1 = 1'b0;
-						end
+						nxt_state = SNOOP;
 					end
 
 					else if(dcif.dmemREN) begin //data read
@@ -232,14 +208,14 @@ always_comb begin
 							if (~dcache[0][query.idx].dirty) begin // if in shared state move to modified
 								ccwrite_nxt = 1'b1;
 								cctrans_nxt = 1'b1;
-								dcif.dhit = 0;
-								nxt_state = SYNC0;
 							end
 							else begin
 								ccwrite_nxt = 1'b0;
 								cctrans_nxt = 1'b0;
-								nxt_state = IDLE;
 							end
+							nxt_state = IDLE;
+							cctrans_nxt = 0;
+							ccwrite_nxt = 0;
 						end
 
 						else if(isHit1) begin // hit in cache 1 for write
@@ -251,14 +227,14 @@ always_comb begin
 							if (~dcache[1][query.idx].dirty) begin // if in shared state move to modified
 								ccwrite_nxt = 1'b1;
 								cctrans_nxt = 1'b1;
-								dcif.dhit = 0;
-								nxt_state = SYNC0;								
 							end
 							else begin
 								ccwrite_nxt = 1'b0;
 								cctrans_nxt = 1'b0;
-								nxt_state = IDLE;	
 							end
+							nxt_state = IDLE;
+							cctrans_nxt = 0;
+							ccwrite_nxt = 0;
 						end
 
 						else if(dcache[lru[query.idx]][query.idx].dirty == 1 && dcache[lru[query.idx]][query.idx].valid == 1) begin	// Cache miss. If lru cache is dirty must write before using it
@@ -270,13 +246,11 @@ always_comb begin
 
 						else begin // Simply change the data in cache
 							cctrans_nxt = 1'b1;
-							ccwrite_nxt = 1'b0;
+							ccwrite_nxt = 1'b1;
 							nxt_state = LOADTOCACHE0;	
 						end
 					end
 					else if(dcif.halt) begin
-							cctrans_nxt = 1'b0;
-							ccwrite_nxt = 1'b0;
 							nxt_state = FLUSH0;
 					end
 
@@ -286,38 +260,6 @@ always_comb begin
 							ccwrite_nxt = 1'b0;
 					end
 				end
-
-			SYNC0:
-				begin
-					ccwrite_nxt = 1'b1;
-					cctrans_nxt = 1'b1;
-					dcif.dhit = 0;
-					if(cif.dwait == 0)
-						begin
-							nxt_state = SYNC1;
-						end
-					else
-						begin
-							nxt_state = SYNC0;
-						end
-				end
-
-			SYNC1:
-				begin
-					ccwrite_nxt = 1'b1;
-					cctrans_nxt = 1'b1;
-					dcif.dhit = 0;
-					if(cif.dwait == 0)
-						begin
-							dcif.dhit = 1;
-							nxt_state = IDLE;
-						end
-					else
-						begin
-							nxt_state = SYNC1;
-						end
-				end
-
 
 			LOADTOCACHE0:	//Read first word from memory
 				begin
@@ -358,6 +300,8 @@ always_comb begin
 							dirty_nxt0 = 0;
 						end
 						nxt_state = IDLE; 
+						cctrans_nxt = 0;
+						ccwrite_nxt = 0;
 					end
 				end
 
@@ -420,12 +364,10 @@ always_comb begin
 					else if(dcache[0][count[2:0]].dirty && dcache[0][count[2:0]].valid) begin	//Write back this data to memory
 							nxt_count = count;
 							nxt_state = WB0_FLUSH0;
-							valid_nxt0 = 0;
 					end
 					else begin
 							nxt_count = count + 1;
 							nxt_state = FLUSH0;
-							valid_nxt0 = 0;
 					end
 				end	
 
@@ -465,12 +407,10 @@ always_comb begin
 					else if(dcache[1][count[2:0]].dirty && dcache[1][count[2:0]].valid) begin	//Write back this data to memory
 							nxt_count = count;
 							nxt_state = WB0_FLUSH1;
-							valid_nxt1 = 0;
 					end
 					else begin
 							nxt_count = count + 1;
 							nxt_state = FLUSH1;
-							valid_nxt1 = 0;
 					end
 				end
 			
@@ -530,9 +470,16 @@ always_comb begin
 						end
 					end
 
-					if (cif.ccinv) begin// invalidate cache entry for snoop address 
-						snoop_valid_nxt0 = 1'b0;
-						snoop_valid_nxt1 = 1'b0;
+					if (cif.ccinv)
+					begin// invalidate cache entry for snoop address 
+						if(isSnoopHit0 && ~dcache[0][snoop.idx].dirty)
+							begin
+								snoop_valid_nxt0 = 1'b0;
+							end
+						else if(isSnoopHit1 && ~dcache[1][snoop.idx].dirty)
+							begin
+								snoop_valid_nxt1 = 1'b0;
+							end
 					end
 				end
 
@@ -567,11 +514,21 @@ always_comb begin
 					if (cif.dwait == 1) 
 						nxt_state = SNOOP2;
 					else
-						nxt_state = IDLE;
-
-					snoop_valid_nxt0 = 1'b0;
-					snoop_valid_nxt1 = 1'b0;
-
+						begin
+							nxt_state = IDLE;
+							cctrans_nxt = 0;
+							ccwrite_nxt = 0;
+							if (cif.ccinv) begin// invalidate cache entry for snoop address 
+								if(isSnoopHit0)
+									begin
+										snoop_valid_nxt0 = 1'b0;
+									end
+								else if(isSnoopHit1)
+									begin
+										snoop_valid_nxt1 = 1'b0;
+									end
+							end							
+						end
 				end
 			END:
 				begin
