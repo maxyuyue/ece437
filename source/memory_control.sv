@@ -54,7 +54,7 @@ state_type state, nxt_state;
   */
 
 logic[1:0] ccinv, nxt_ccinv;
-logic[1:0] ccwait, nxt_ccwait;
+logic[1:0] ccwait;
 word_t[1:0] snoopaddr, nxt_snoopaddr;
 logic serviced, nxt_serviced;
 logic lru, nlru; //used to service the least recently used icache
@@ -83,8 +83,6 @@ always_ff @(posedge CLK or negedge nRST)
       ccinv[1] <= nxt_ccinv[1];
       snoopaddr[0] <= nxt_snoopaddr[0];
       snoopaddr[1] <= nxt_snoopaddr[1];
-      //ccwait[0] <= nxt_ccwait[0];
-      //ccwait[1] <= nxt_ccwait[1];
       serviced <= nxt_serviced;
       lru <= nlru;
       i <= nxt_i;
@@ -92,10 +90,10 @@ always_ff @(posedge CLK or negedge nRST)
 end
 
 
-always_comb
-  begin
-    ccif.ramstore = '0;
+always_comb begin
+
     ccif.ramaddr = '0;
+    ccif.ramstore = '0;
     ccif.ramWEN = 0;
     ccif.ramREN = 0;
 
@@ -109,8 +107,6 @@ always_comb
     ccif.dwait[0] = 1;    
     ccif.dwait[1] = 1;
 
-    //nxt_ccwait[0] = ccwait[0];
-    //nxt_ccwait[1] = ccwait[1];
     nxt_ccinv[0] = ccinv[0];
     nxt_ccinv[1] = ccinv[1];
     nxt_snoopaddr[0] = snoopaddr[0];
@@ -120,13 +116,15 @@ always_comb
     nlru = lru;
     nxt_i = i;
 
+    nxt_state = state;
+    ccwait[0] = 1'b0;
+    ccwait[1] = 1'b0;
+
     case (state)
       IDLE:
         begin
           nxt_ccinv[0] = 0;
           nxt_ccinv[1] = 0;          
-          //nxt_ccwait[0] = 1'b0;
-          //nxt_ccwait[1] = 1'b0;
           ccwait[0] = 1'b0;
           ccwait[1] = 1'b0;
           nxt_snoopaddr[0] = 32'hBAD1BAD1;
