@@ -26,7 +26,7 @@
     j_t jType;
 
     always_comb begin
-      countIf.ll = 0; // default except for LL instruction
+      contIf.ll = 0; // default except for LL instruction
       if (instr[31:26] == RTYPE) begin // R-type instruction
         rType = instr;
         iType = 0;
@@ -171,12 +171,12 @@
         else if (instr[31:26] == LL) begin // I-type instruction
           contIf.dREN = 1;
           contIf.WEN = 1; // preiously dhit
-          countIf.ll = 1;
+          contIf.ll = 1;
         end
         else if (instr[31:26] == SC) begin // I-type instruction
-          contIf.WEN = 0;
+          contIf.WEN = 1;
           contIf.dWEN = 1;
-          countIf.ll = 1; // should probably have called this ll/sc or something
+          contIf.ll = 1; // should probably have called this ll/sc or something
         end
         else if (instr[31:26] == XORI) begin // I-type instruction
           contIf.aluOp = ALU_XOR;

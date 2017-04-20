@@ -214,6 +214,7 @@ always_comb begin
 							dcif.dmemload = 0;
 						else if (dcif.datomic && (dcif.dmemaddr == link_reg)) // if atomic and addresses match
 							dcif.dmemload = 1;
+							link_reg_nxt <= '0; // now invalidate
 
 						if(isHit0) begin // hit in cache 0 for write
 							dcif.dhit = 1;

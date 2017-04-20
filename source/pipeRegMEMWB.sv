@@ -48,6 +48,7 @@ module pipeRegMEMWB(
       prMEMWB_out.outputPort = 32'h0;
       prMEMWB_out.dmemload = 32'h0;
       prMEMWB_out.dest = 5'h0;
+      prMEMWB_out.ll = 1'b0;
 
       prMEMWB_out_old.regDst = 0;
       prMEMWB_out_old.branch = 0;
@@ -71,6 +72,7 @@ module pipeRegMEMWB(
       prMEMWB_out_old.outputPort = 32'h0;
       prMEMWB_out_old.dmemload = 32'h0;
       prMEMWB_out_old.dest = 5'h0;
+      prMEMWB_out_old.ll = 1'b0;
     end
     else if (flush == 1 && ihit == 1) // regular flush stuff
     begin   
@@ -96,6 +98,7 @@ module pipeRegMEMWB(
       prMEMWB_out.outputPort = 32'h0;
       prMEMWB_out.dmemload = 32'h0;
       prMEMWB_out.dest = 5'h0;
+      prMEMWB_out.ll = 1'b0;
     end
     else if (enable == 1) begin
       prMEMWB_out_old.regDst = prMEMWB_out.regDst;
@@ -120,6 +123,7 @@ module pipeRegMEMWB(
       prMEMWB_out_old.outputPort = prMEMWB_out.outputPort; 
       prMEMWB_out_old.dmemload = prMEMWB_out.dmemload;
       prMEMWB_out_old.dest = prMEMWB_out.dest;
+      prMEMWB_out_old.ll = prMEMWB_out.ll;
 
       prMEMWB_out.regDst = prMEMWB_in.regDst;
       prMEMWB_out.branch = prMEMWB_in.branch;
@@ -143,6 +147,7 @@ module pipeRegMEMWB(
       prMEMWB_out.outputPort = prMEMWB_in.outputPort; 
       prMEMWB_out.dmemload = prMEMWB_in.dmemload;
       prMEMWB_out.dest = prMEMWB_in.dest;
+      prMEMWB_out.ll = prMEMWB_in.ll;
     end
   end
 

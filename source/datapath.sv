@@ -230,7 +230,7 @@ module datapath (
       if (memwbValue.jl == 1)
         rfif.wdat = memwbValue.pc +4;
       else begin
-        if (memwbValue.dREN == 1)
+        if ((memwbValue.dREN == 1) || (memwbValue.ll == 1))
           rfif.wdat = memwbValue.dmemload;
         else 
           rfif.wdat = memwbValue.outputPort;
