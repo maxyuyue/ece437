@@ -88,6 +88,7 @@ module datapath (
   assign idex_input.rdat2 = rfif.rdat2;
   assign idex_input.outputPort = 32'h0;
   assign idex_input.dmemload = 32'h0;
+  assign idex_input.ll = countIf.ll;
   always_comb begin //wsel iputs
     if (countIf.jl == 1) begin
       idex_input.dest = 5'd31;
@@ -124,6 +125,7 @@ module datapath (
   assign exmem_input.outputPort = aluf.outputPort;
   assign exmem_input.dmemload = 32'h0;
   assign exmem_input.dest = idexValue.dest;
+  assign exmem_input.ll = idexValue.ll;
 
 
   //MEMWB pipeline register input
@@ -149,6 +151,7 @@ module datapath (
   assign memwb_input.outputPort = exmemValue.outputPort;
   assign memwb_input.dmemload = dpif.dmemload;
   assign memwb_input.dest = exmemValue.dest;
+  assign memwb_input.ll = exmemValue.ll;
 
 
   // Control Interface for Program Counter
@@ -166,6 +169,7 @@ module datapath (
   assign countIfPC.bne = idexValue.bne;
   assign countIfPC.shiftSel = idexValue.shiftSel;
   assign countIfPC.aluOp = idexValue.aluOp;
+  assign countIfPC.ll = idexValue.ll;
 
 
 
@@ -202,7 +206,7 @@ module datapath (
         pc <= PC_INIT;
       end
       else begin  
-        if ((ihitEnable == 1) && (stallPC == 0) && (~dpif.halt)) begin
+        if ((ihitEnable == 1) && (stallPC == 0)) begin
           pc <= newPC;        
         end
         else begin
@@ -226,7 +230,7 @@ module datapath (
       if (memwbValue.jl == 1)
         rfif.wdat = memwbValue.pc +4;
       else begin
-        if (memwbValue.dREN == 1)
+        if ((memwbValue.dREN == 1) || (memwbValue.ll == 1))
           rfif.wdat = memwbValue.dmemload;
         else 
           rfif.wdat = memwbValue.outputPort;
@@ -274,6 +278,7 @@ module datapath (
 
   /********** Memory Write **********/
   assign dpif.dmemstore = exmemValue.rdat2;
+  assign dpif.datomic = exmemValue.ll;
   always_comb begin
     if (r2Fwd == 1) 
         exmem_input.rdat2 = rdat2Fwd;
@@ -288,11 +293,10 @@ module datapath (
     if (nRST == 0) begin
       dpif.halt = 0;
     end
-    else if (exmemValue.instr == 32'hffffffff) begin
+    else if (memwbValue.instr == 32'hffffffff) begin
       dpif.halt = 1;
     end
   end
-
   /********** Halt Signal **********/
 
 endmodule

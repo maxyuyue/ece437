@@ -26,7 +26,7 @@ module memory_control_tb;
   // interface
   caches_if cif0();
   caches_if cif1();
-  cache_control_if #(.CPUS(1)) ccif(cif0,cif1);
+  cache_control_if #(.CPUS(2)) ccif(cif0,cif1);
   cpu_ram_if ramif();
 
   // test program
@@ -99,7 +99,9 @@ program test (
   cache_control_if.cc cfif,
   output logic nRST
   );
+    import cpu_types_pkg::*;
     parameter PERIOD = 10;
+    ramstate_t ramState = ACCESS;
     string testType = "Initialization";
 
     initial begin
@@ -108,15 +110,30 @@ program test (
     cif0.iREN = 1'b0;
     cif0.dREN = 1'b0;
     cif0.dWEN = 1'b0;
-    cif0.dstore = 32'h01234567;
-    cif0.iaddr = 32'hfedcba98;
-    cif0.daddr = 32'h10101010;
+    cif0.dstore = 32'hBAD1BAD1;
+    cif0.iaddr = 32'hBAD1BAD1;
+    cif0.daddr = 32'hBAD1BAD1;
+    cif0.cctrans = 1'b0;
+    cif0.ccwrite = 1'b0;
     
+    cif1.iREN = 1'b0;
+    cif1.dREN = 1'b0;
+    cif1.dWEN = 1'b0;
+    cif1.dstore = 32'hBAD1BAD1;
+    cif1.iaddr = 32'hBAD1BAD1;
+    cif1.daddr = 32'hBAD1BAD1;
+    cif1.cctrans = 1'b0;
+    cif1.ccwrite = 1'b0;
+
     // Check these outputs which goes to the datapath/cache
       //ccif.iwait
       //ccif.dwait
       //ccif.dload
-      //cif.iload
+      //ccif.iload
+
+      //cif#.ccwait
+      //cif#.ccinv
+      //cif#.ccsnoopaddr
 
     // Check these outputs which goes to the RAM
       //ccif.ramWEN
@@ -127,59 +144,75 @@ program test (
     // Check these inputs from RAM
       //ccif.ramstate
       //ccif.ramload   
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
-    
-    testType = "Read first instruction";
-    nRST = 1;
+    @(posedge CLK); @(posedge CLK);
+
+    reset();
+    testType = "Read instr from core 0";
     cif0.iREN = 1'b1;
-    cif0.dREN = 1'b0;
-    cif0.dWEN = 1'b0;
-    cif0.dstore = 32'hBAD1BAD1;
     cif0.iaddr = 32'h00000000;
-    cif0.daddr = 32'hBAD1BAD1;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
+    @(posedge ccif.ramREN); @(posedge CLK);
     
-    testType = "Read second instruction";
+    reset();
+    testType = "Read instr from core 1";
+    cif1.iREN = 1'b1;
+    cif1.iaddr = 32'h00000004;
+    @(posedge ccif.ramREN); @(posedge CLK); @(posedge CLK);
+
+    reset();
+    testType = "1st read instr from both cores";
     nRST = 1;
     cif0.iREN = 1'b1;
-    cif0.dREN = 1'b0;
-    cif0.dWEN = 1'b0;
-    cif0.dstore = 32'hBAD1BAD1;
-    cif0.iaddr = 32'h00000004;
-    cif0.daddr = 32'hBAD1BAD1;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
+    cif0.iaddr = 32'h0000008;
+    cif1.iREN = 1'b1;
+    cif1.iaddr = 32'h0000000C;
+    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
 
-    testType = "Read data";
+    reset();
+    testType = "2nd read instr from both cores";
     nRST = 1;
-    cif0.iREN = 1'b0;
+    cif0.iREN = 1'b1;
+    cif0.iaddr = 32'h0000010;
+    cif1.iREN = 1'b1;
+    cif1.iaddr = 32'h00000014;
+    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
+
+    reset();
+    testType = "Read data from core 0";
     cif0.dREN = 1'b1;
-    cif0.dWEN = 1'b0;
-    cif0.dstore = 32'hBAD1BAD1;
-    cif0.iaddr = 32'hBAD1BAD1;
     cif0.daddr = 32'h000000F0;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
+    cif0.cctrans = 1'b1; // transition  from Invalid to Shared
+    @(posedge CLK); 
+    cif1.cctrans = 1'b1; // let know that cache 1 doesn't have value
+    @(posedge CLK); 
+    cif1.cctrans = 1'b0;
+    @(posedge CLK); @(posedge CLK); @(posedge CLK); 
+    
+    reset();
+    testType = "Read data from core 1";
+    cif1.dREN = 1'b1;
+    cif1.daddr = 32'h000000F4;
+    cif1.cctrans = 1'b1; // transition  from Invalid to Shared
+    @(posedge CLK); 
+    cif0.cctrans = 1'b1; // let know that cache 0 doesn't have value
+    @(posedge CLK);
+    cif0.cctrans = 1'b0;
+    @(posedge CLK);  @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK); 
+ 
 
-    testType = "Write data";
-    nRST = 1;
-    cif0.iREN = 1'b0;
-    cif0.dREN = 1'b0;
+    reset();
+    testType = "Write data from core 0";
     cif0.dWEN = 1'b1;
-    cif0.dstore = 32'h1234567;
-    cif0.iaddr = 32'hBAD1BAD1;
-    cif0.daddr = 32'h000000F0;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
+    cif0.daddr = 32'h000000FC;
+    cif0.dstore = 32'h12345678;
+    cif0.cctrans = 1'b1; // transition  from Invalid to Shared
+    @(posedge CLK); 
+    cif1.cctrans = 1'b1; // let know that cache 1 doesn't have value
+    @(posedge CLK); 
+    cif1.cctrans = 1'b0;
+    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK)
 
-    testType = "Read data";
-    nRST = 1;
-    cif0.iREN = 1'b1;
-    cif0.dREN = 1'b1;
-    cif0.dWEN = 1'b0;
-    cif0.dstore = 32'hBAD1BAD1;
-    cif0.iaddr = 32'h11111111;
-    cif0.daddr = 32'h000000F0;
-    @(posedge CLK); @(posedge CLK); @(posedge CLK); @(posedge CLK);
-
-    dump_memory();
+    testType = "Dump Memory";
+    //dump_memory();
    
     end
 task automatic dump_memory();
@@ -224,6 +257,30 @@ task automatic dump_memory();
       $fclose(memfd);
       $display("Finished memory dump.");
     end
+  endtask
+
+
+
+  task automatic reset();
+    import cpu_types_pkg::*;
+    nRST = 1;
+    cif0.iREN = 1'b0;
+    cif0.dREN = 1'b0;
+    cif0.dWEN = 1'b0;
+    cif0.dstore = 32'hBAD1BAD1;
+    cif0.iaddr = 32'hBAD1BAD1;
+    cif0.daddr = 32'hBAD1BAD1;
+    cif0.cctrans = 1'b0;
+    cif0.ccwrite = 1'b0;
+    
+    cif1.iREN = 1'b0;
+    cif1.dREN = 1'b0;
+    cif1.dWEN = 1'b0;
+    cif1.dstore = 32'hBAD1BAD1;
+    cif1.iaddr = 32'hBAD1BAD1;
+    cif1.daddr = 32'hBAD1BAD1;
+    cif1.cctrans = 1'b0;
+    cif1.ccwrite = 1'b0;
   endtask
 
 endprogram
